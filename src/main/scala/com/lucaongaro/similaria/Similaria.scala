@@ -5,9 +5,9 @@ import com.lucaongaro.similaria.lmdb._
 import scala.collection.SortedSet
 import java.io.File
 
-class Similaria( implicit val opts: DBOptions ) extends CollaborativeFilter {
+class Similaria( implicit val opts: Options ) extends CollaborativeFilter {
   type PrefSet = Set[Long]
-  val dbm = new DBManager( opts )
+  val dbm = new DBManager( opts.dbPath, opts.dbSize )
 
   def addPreferenceSet(
     prefSet: PrefSet
@@ -36,9 +36,9 @@ class Similaria( implicit val opts: DBOptions ) extends CollaborativeFilter {
     originalSet: PrefSet,
     setToRemove: PrefSet
   ) = {
-    val set = setToRemove -- originalSet
+    val set = setToRemove & originalSet
     incrementSubset( originalSet, set, -1 )
-    originalSet ++ set
+    originalSet -- set
   }
 
   def findNeighborsOf(
@@ -53,28 +53,36 @@ class Similaria( implicit val opts: DBOptions ) extends CollaborativeFilter {
     coOccurrencies.foldLeft( emptySet ) { ( set, coOcc ) =>
       val ( other, coCount ) = coOcc
       val otherCount = dbm.getOccurrency( other )
-      val sim = similarity( itemCount, otherCount, coCount )
+      val sim = opts.similarity( itemCount, otherCount, coCount )
       set + Neighbor( other, sim )
     }.take( limit )
   }
 
+  def stats = {
+    dbm.stats
+  }
+
+  def shutdown() {
+    dbm.close()
+  }
+
   // Private methods
 
-  def incrementSet(
+  private def incrementSet(
     set:       PrefSet,
     increment: Long
   ) {
     set.subsets(2).map( _.toList ).foreach {
       case item1 :: item2 :: Nil =>
-        dbm.incrementCoOccurrency( item1, item2, 1 )
+        dbm.incrementCoOccurrency( item1, item2, increment )
       case _ =>
     }
     set.foreach { item =>
-      dbm.incrementOccurrency( item, 1 )
+      dbm.incrementOccurrency( item, increment )
     }
   }
 
-  def incrementSubset(
+  private def incrementSubset(
     originalSet: PrefSet,
     subset:      PrefSet,
     increment:   Long
@@ -83,17 +91,5 @@ class Similaria( implicit val opts: DBOptions ) extends CollaborativeFilter {
     for ( orig <- originalSet; item <- subset ) {
       dbm.incrementCoOccurrency( orig, item, increment )
     }
-  }
-
-  private def similarity(
-    aCount:  Long,
-    bCount:  Long,
-    abCount: Long
-  ): Double = {
-    abCount.toDouble / ( aCount + bCount - abCount )
-  }
-
-  def shutdown() {
-    dbm.close()
   }
 }

@@ -3,11 +3,11 @@ package com.lucaongaro.similaria.lmdb
 import org.fusesource.lmdbjni._
 import org.fusesource.lmdbjni.Constants._
 
-class DBManager( opts: DBOptions ) {
+class DBManager( dbPath: String, dbSize: Long ) {
   private val env = new Env()
-  env.setMapSize( opts.size )
+  env.setMapSize( dbSize )
   env.setMaxDbs( 2 )
-  env.open( opts.path, NOSYNC )
+  env.open( dbPath, NOSYNC )
 
   private val rndDB = env.openDatabase( "co-index", CREATE )
   private val itrDB = env.openDatabase( "co-occur",
@@ -70,6 +70,13 @@ class DBManager( opts: DBOptions ) {
     }
   }
 
+  def stats = {
+    Map(
+      "rndDB" -> statsFor( rndDB ),
+      "itrDB" -> statsFor( itrDB )
+    )
+  }
+
   def close() {
     env.close()
   }
@@ -106,5 +113,18 @@ class DBManager( opts: DBOptions ) {
       else
         tx.abort()
     }
+  }
+
+  private def statsFor( db: Database ) = {
+    val stat = db.stat()
+    val mask = 0xffffffffL
+    Map(
+      "pageSize"      -> ( mask & stat.ms_psize ),
+      "depth"         -> ( mask & stat.ms_depth ),
+      "branchPages"   -> ( mask & stat.ms_branch_pages ),
+      "leafPages"     -> ( mask & stat.ms_leaf_pages ),
+      "overflowPages" -> ( mask & stat.ms_overflow_pages ),
+      "entries"       -> ( mask & stat.ms_entries )
+    )
   }
 }

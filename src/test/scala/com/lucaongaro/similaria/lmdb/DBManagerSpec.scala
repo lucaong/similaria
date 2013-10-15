@@ -1,4 +1,4 @@
-import com.lucaongaro.similaria.lmdb.{ DBManager, DBOptions }
+import com.lucaongaro.similaria.lmdb.DBManager
 import org.scalatest._
 import org.scalatest.matchers.ShouldMatchers
 import scala.language.postfixOps
@@ -11,8 +11,7 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
   private val file = new File("./tmp/testdb")
 
   override def withFixture( test: NoArgTest ) {
-    val opts = new DBOptions( "./tmp/testdb", 10485760, 0.3 )
-    dbm = new DBManager( opts )
+    dbm = new DBManager( "./tmp/testdb", 10485760 )
     try
       test()
     finally {
