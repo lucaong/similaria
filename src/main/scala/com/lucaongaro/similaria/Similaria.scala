@@ -20,9 +20,9 @@ class Similaria( implicit val opts: Options ) extends CollaborativeFilter {
     originalSet: PrefSet,
     setToAdd:    PrefSet
   ) = {
-    val set = setToAdd -- originalSet
+    val set = setToAdd &~ originalSet
     incrementSubset( originalSet, set, 1 )
-    originalSet ++ set
+    originalSet | set
   }
 
   def removePreferenceSet(
@@ -38,7 +38,7 @@ class Similaria( implicit val opts: Options ) extends CollaborativeFilter {
   ) = {
     val set = setToRemove & originalSet
     incrementSubset( originalSet, set, -1 )
-    originalSet -- set
+    originalSet &~ set
   }
 
   def findNeighborsOf(

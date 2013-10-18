@@ -33,6 +33,11 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
           List((456L, 1))
         )
       }
+
+      it("returns the added set") {
+        val set = rec.addPreferenceSet( List(123L, 456L).toSet )
+        set should be( List(123L, 456L).toSet )
+      }
     }
 
     describe("addToPreferenceSet") {
@@ -48,6 +53,11 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
           List((2L, 1), (3L, 1), (4L, 1))
         )
       }
+
+      it("returns the resulting set") {
+        val set = rec.addToPreferenceSet( List(1L, 2L).toSet, List(3L, 4L).toSet )
+        set should be( List(1L, 2L, 3L, 4L).toSet )
+      }
     }
 
     describe("removePreferenceSet") {
@@ -59,6 +69,11 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
         rec.dbm.getCoOccurrencies( 123, 2 ) should be(
           List((456L, 0))
         )
+      }
+
+      it("returns the removed set") {
+        val set = rec.removePreferenceSet( List(123L, 456L).toSet )
+        set should be( List(123L, 456L).toSet )
       }
     }
 
@@ -74,6 +89,11 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
         occurrencies should be(
           List((2L, 1), (3L, 0), (4L, 0))
         )
+      }
+
+      it("returns the resulting set") {
+        val set = rec.removeFromPreferenceSet( List(1L, 2L, 3L, 4L).toSet, List(3L, 4L).toSet )
+        set should be( List(1L, 2L).toSet )
       }
     }
 
