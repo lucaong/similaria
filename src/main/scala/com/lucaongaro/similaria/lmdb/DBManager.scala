@@ -7,7 +7,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
   private val env = new Env()
   env.setMapSize( dbSize )
   env.setMaxDbs( 2 )
-  env.open( dbPath, NOSYNC )
+  env.open( dbPath, NOSYNC | WRITEMAP )
 
   private val rndDB = env.openDatabase( "co-index", CREATE )
   private val itrDB = env.openDatabase( "co-occur",
