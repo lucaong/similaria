@@ -77,6 +77,10 @@ class DBManager( dbPath: String, dbSize: Long ) {
     )
   }
 
+  def copy( path: String ) {
+    env.copy( path )
+  }
+
   def close() {
     env.close()
   }

@@ -8,10 +8,14 @@ import org.apache.commons.io.FileUtils
 class DBManagerSpec extends FunSpec with ShouldMatchers {
 
   private var dbm: DBManager = _
-  private val file = new File("./tmp/testdb")
+  private var dbPath = "./tmp/testdb"
+  private val file   = new File( dbPath )
 
   override def withFixture( test: NoArgTest ) {
-    dbm = new DBManager( "./tmp/testdb", 10485760 )
+    // Prepare and cleanup test db directory
+    file.mkdirs()
+    FileUtils.cleanDirectory( file )
+    dbm = new DBManager( dbPath, 10485760 )
     try
       test()
     finally {
@@ -72,6 +76,33 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
             two._1 should be( 456 )
             two._2 should be( 1 )
           case _ => println(coOcc); throw new Exception("unexpected result")
+        }
+      }
+    }
+
+    describe("copy") {
+      it("creates a backup of the data at the specified location") {
+        val copyLocation = "./tmp/testdbcopy"
+        val copyFile     = new File( copyLocation )
+
+        // Prepare and cleanup db backup directory
+        copyFile.mkdirs()
+        FileUtils.cleanDirectory( copyFile )
+
+        dbm.incrementOccurrency( 123, 3 )
+        dbm.incrementCoOccurrency( 123, 456, 2 )
+        dbm.incrementCoOccurrency( 123, 789, 1 )
+        dbm.copy( copyLocation )
+
+        val copy = new DBManager( copyLocation, 10485760 )
+        try {
+          copy.getOccurrency( 123 ) should be( 3 )
+          copy.getCoOccurrencies( 123, 3 ) should be(
+            List( (456L, 2), (789L, 1) )
+          )
+        } finally {
+          copy.close()
+          FileUtils.cleanDirectory( copyFile )
         }
       }
     }

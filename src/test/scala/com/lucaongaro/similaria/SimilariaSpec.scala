@@ -8,12 +8,17 @@ import org.apache.commons.io.FileUtils
 
 class SimilariaSpec extends FunSpec with ShouldMatchers {
   private var rec: Similaria = _
-  private val file = new File("./tmp/testdb")
+  private var dbPath = "./tmp/testdb"
+  private val file   = new File( dbPath )
 
   override def withFixture( test: NoArgTest ) {
+    // Prepare and cleanup test db directory
+    file.mkdirs()
+    FileUtils.cleanDirectory( file )
+
     val similarity = ( a: Long, b: Long, ab: Long ) =>
       ab.toDouble / ( a + b - ab )
-    implicit val opts = new Options( "./tmp/testdb", 10485760, similarity )
+    implicit val opts = new Options( dbPath, 10485760, similarity )
     rec = new Similaria()
     try
       test()
