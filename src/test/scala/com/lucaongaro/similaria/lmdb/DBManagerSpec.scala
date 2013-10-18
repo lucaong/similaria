@@ -10,10 +10,10 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
   private var dbm: DBManager = _
   private var dbPath = "./tmp/testdb"
   private val file   = new File( dbPath )
+  file.mkdirs()
 
   override def withFixture( test: NoArgTest ) {
     // Prepare and cleanup test db directory
-    file.mkdirs()
     FileUtils.cleanDirectory( file )
     dbm = new DBManager( dbPath, 10485760 )
     try
@@ -38,6 +38,18 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
         dbm.getOccurrency( 123 ) should be( 42 )
         dbm.incrementOccurrency( 123, 4 )
         dbm.getOccurrency( 123 ) should be( 46 )
+      }
+
+      it("decrements the occurrency count if given a negative increment") {
+        dbm.incrementOccurrency( 123, 46 )
+        dbm.incrementOccurrency( 123, -4 )
+        dbm.getOccurrency( 123 ) should be( 42 )
+      }
+
+      it("never decrements a count below 0") {
+        dbm.incrementOccurrency( 123, 42 )
+        dbm.incrementOccurrency( 123, -46 )
+        dbm.getOccurrency( 123 ) should be( 0 )
       }
     }
 
@@ -77,6 +89,31 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
             two._2 should be( 1 )
           case _ => println(coOcc); throw new Exception("unexpected result")
         }
+      }
+    }
+
+    describe("incrementCoOccurrency") {
+      it("increments co-occurrency for a pair of items") {
+        dbm.incrementCoOccurrency( 123, 456, 3 )
+        dbm.getCoOccurrencies( 123, 10 ) should be( List( (456L, 3) ) )
+        dbm.getCoOccurrencies( 456, 10 ) should be( List( (123L, 3) ) )
+      }
+
+      it("decrements co-occurrency if given a negative increment") {
+        dbm.incrementCoOccurrency( 123, 456, 3 )
+        dbm.incrementCoOccurrency( 123, 456, -2 )
+        dbm.getCoOccurrencies( 123, 10 ) should be( List( (456L, 1) ) )
+        dbm.getCoOccurrencies( 456, 10 ) should be( List( (123L, 1) ) )
+      }
+
+      it("deletes co-occurrency if decremented to or below 0") {
+        dbm.incrementCoOccurrency( 123, 456, 2 )
+        dbm.incrementCoOccurrency( 123, 456, -2 )
+        dbm.getCoOccurrencies( 123, 10 ) should be( Nil )
+        dbm.getCoOccurrencies( 456, 10 ) should be( Nil )
+        dbm.incrementCoOccurrency( 123, 456, -2 )
+        dbm.getCoOccurrencies( 123, 10 ) should be( Nil )
+        dbm.getCoOccurrencies( 456, 10 ) should be( Nil )
       }
     }
 

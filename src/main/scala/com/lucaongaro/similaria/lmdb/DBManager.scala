@@ -29,11 +29,14 @@ class DBManager( dbPath: String, dbSize: Long ) {
   ) {
     transaction( false ) { tx =>
       val key     = Key( item )
-      val current = rndDB.get( tx, key ) match {
-        case Score( c ) => c
-        case _          => 0
+      val updated = rndDB.get( tx, key ) match {
+        case Score( c ) => c + increment
+        case _          => increment
       }
-      rndDB.put( tx, key, Score( current + increment ) )
+      if ( updated > 0 )
+        rndDB.put( tx, key, Score( updated ) )
+      else
+        rndDB.delete( tx, key )
     }
   }
 
@@ -62,11 +65,15 @@ class DBManager( dbPath: String, dbSize: Long ) {
         case _          => 0
       }
       val score = current + increment
-      rndDB.put( tx, coKey, Score( score ) )
       itrDB.delete( tx, Key( itemA ), KeyScore( itemB, current ) )
       itrDB.delete( tx, Key( itemB ), KeyScore( itemA, current ) )
-      itrDB.put( tx, Key( itemA ), KeyScore( itemB, score ) )
-      itrDB.put( tx, Key( itemB ), KeyScore( itemA, score ) )
+      if ( score > 0 ) {
+        rndDB.put( tx, coKey, Score( score ) )
+        itrDB.put( tx, Key( itemA ), KeyScore( itemB, score ) )
+        itrDB.put( tx, Key( itemB ), KeyScore( itemA, score ) )
+      } else {
+        rndDB.delete( tx, coKey )
+      }
     }
   }
 

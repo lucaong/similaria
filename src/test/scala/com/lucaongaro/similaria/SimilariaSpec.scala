@@ -69,11 +69,9 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
       it("decrements occurrencies and co-occurencies for set") {
         rec.addPreferenceSet( List(123L, 456L).toSet )
         rec.removePreferenceSet( List(123L, 456L).toSet )
-        rec.dbm.getOccurrency( 123 ) should be(0)
-        rec.dbm.getOccurrency( 456 ) should be(0)
-        rec.dbm.getCoOccurrencies( 123, 2 ) should be(
-          List((456L, 0))
-        )
+        rec.dbm.getOccurrency( 123 ) should be( 0 )
+        rec.dbm.getOccurrency( 456 ) should be( 0 )
+        rec.dbm.getCoOccurrencies( 123, 2 ) should be( Nil )
       }
 
       it("returns the removed set") {
@@ -86,13 +84,13 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
       it("remove items from a pre-existing preference set") {
         rec.addPreferenceSet( List(1L, 2L, 3L, 4L).toSet )
         rec.removeFromPreferenceSet( List(1L, 2L, 3L, 4L).toSet, List(3L, 4L).toSet )
-        rec.dbm.getOccurrency( 1 ) should be(1)
-        rec.dbm.getOccurrency( 2 ) should be(1)
-        rec.dbm.getOccurrency( 3 ) should be(0)
-        rec.dbm.getOccurrency( 4 ) should be(0)
+        rec.dbm.getOccurrency( 1 ) should be( 1 )
+        rec.dbm.getOccurrency( 2 ) should be( 1 )
+        rec.dbm.getOccurrency( 3 ) should be( 0 )
+        rec.dbm.getOccurrency( 4 ) should be( 0 )
         val occurrencies = rec.dbm.getCoOccurrencies( 1, 3 ).sortBy( _._1 )
         occurrencies should be(
-          List((2L, 1), (3L, 0), (4L, 0))
+          List( (2L, 1) )
         )
       }
 
