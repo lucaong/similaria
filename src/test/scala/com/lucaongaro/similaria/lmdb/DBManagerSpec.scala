@@ -55,7 +55,7 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
 
     describe("getCoOccurrencies") {
       it("returns empty list if there are none") {
-        val coOcc = dbm.getCoOccurrencies( 123, 10 )
+        val coOcc = dbm.getCoOccurrencies( 123 )
         coOcc should be( Nil )
       }
 
@@ -63,7 +63,7 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
         dbm.incrementCoOccurrency( 123, 213, 1 )
         dbm.incrementCoOccurrency( 123, 132, 2 )
         dbm.incrementCoOccurrency( 123, 312, 3 )
-        val coOcc = dbm.getCoOccurrencies( 123, 10 )
+        val coOcc = dbm.getCoOccurrencies( 123 )
         coOcc match {
           case one::two::three::Nil =>
             one._1 should be( 312 )
@@ -80,7 +80,7 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
         dbm.incrementCoOccurrency( 123, 456, 1 )
         dbm.incrementCoOccurrency( 123, 567, 2 )
         dbm.incrementCoOccurrency( 321, 789, 3 )
-        val coOcc = dbm.getCoOccurrencies( 123, 10 )
+        val coOcc = dbm.getCoOccurrencies( 123 )
         coOcc match {
           case one::two::Nil =>
             one._1 should be( 567 )
@@ -90,30 +90,46 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
           case _ => println(coOcc); throw new Exception("unexpected result")
         }
       }
+
+      it("gets only the first n co-occurrencies if given a limit") {
+        dbm.incrementCoOccurrency( 123, 456, 1 )
+        dbm.incrementCoOccurrency( 123, 567, 2 )
+        dbm.incrementCoOccurrency( 123, 789, 3 )
+        val coOcc = dbm.getCoOccurrencies( 123, 2 )
+        coOcc.length should be( 2 )
+        coOcc match {
+          case one::two::Nil =>
+            one._1 should be( 789 )
+            one._2 should be( 3 )
+            two._1 should be( 567 )
+            two._2 should be( 2 )
+          case _ => println(coOcc); throw new Exception("unexpected result")
+        }
+      }
     }
 
     describe("incrementCoOccurrency") {
       it("increments co-occurrency for a pair of items") {
         dbm.incrementCoOccurrency( 123, 456, 3 )
-        dbm.getCoOccurrencies( 123, 10 ) should be( List( (456L, 3) ) )
-        dbm.getCoOccurrencies( 456, 10 ) should be( List( (123L, 3) ) )
+        dbm.getCoOccurrencies( 123 ) should be( List( (456L, 3) ) )
+        dbm.getCoOccurrencies( 456 ) should be( List( (123L, 3) ) )
       }
 
       it("decrements co-occurrency if given a negative increment") {
         dbm.incrementCoOccurrency( 123, 456, 3 )
         dbm.incrementCoOccurrency( 123, 456, -2 )
-        dbm.getCoOccurrencies( 123, 10 ) should be( List( (456L, 1) ) )
-        dbm.getCoOccurrencies( 456, 10 ) should be( List( (123L, 1) ) )
+        dbm.getCoOccurrencies( 123 ) should be( List( (456L, 1) ) )
+        dbm.getCoOccurrencies( 456 ) should be( List( (123L, 1) ) )
       }
 
       it("deletes co-occurrency if decremented to or below 0") {
         dbm.incrementCoOccurrency( 123, 456, 2 )
         dbm.incrementCoOccurrency( 123, 456, -2 )
-        dbm.getCoOccurrencies( 123, 10 ) should be( Nil )
-        dbm.getCoOccurrencies( 456, 10 ) should be( Nil )
+        dbm.getCoOccurrencies( 123 ) should be( Nil )
+        dbm.getCoOccurrencies( 456 ) should be( Nil )
         dbm.incrementCoOccurrency( 123, 456, -2 )
-        dbm.getCoOccurrencies( 123, 10 ) should be( Nil )
-        dbm.getCoOccurrencies( 456, 10 ) should be( Nil )
+        dbm.getCoOccurrencies( 123 ) should be( Nil )
+        dbm.getCoOccurrencies( 456 ) should be( Nil )
       }
     }
 
@@ -134,7 +150,7 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
         val copy = new DBManager( copyLocation, 10485760 )
         try {
           copy.getOccurrency( 123 ) should be( 3 )
-          copy.getCoOccurrencies( 123, 3 ) should be(
+          copy.getCoOccurrencies( 123 ) should be(
             List( (456L, 2), (789L, 1) )
           )
         } finally {

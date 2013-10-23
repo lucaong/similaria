@@ -42,14 +42,18 @@ class DBManager( dbPath: String, dbSize: Long ) {
 
   def getCoOccurrencies(
     item:  Long,
-    limit: Integer
+    limit: Integer = -1
   ): List[Tuple2[Long, Long]] = {
     withDupIterator( item, itrDB ) { i =>
-      i.map { next =>
+      val tuples = i.map { next =>
         ( next.getValue: @unchecked ) match {
           case KeyScore( key, score ) => ( key, score )
         }
-      }.take( limit ).toList
+      }
+      if ( limit < 0 )
+        tuples.toList
+      else
+        tuples.take( limit ).toList
     }
   }
 

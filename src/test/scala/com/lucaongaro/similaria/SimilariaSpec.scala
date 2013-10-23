@@ -34,7 +34,7 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
         rec.addPreferenceSet( List(123L, 456L).toSet )
         rec.dbm.getOccurrency( 123 ) should be(1)
         rec.dbm.getOccurrency( 456 ) should be(1)
-        rec.dbm.getCoOccurrencies( 123, 2 ) should be(
+        rec.dbm.getCoOccurrencies( 123 ) should be(
           List((456L, 1))
         )
       }
@@ -53,7 +53,7 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
         rec.dbm.getOccurrency( 2 ) should be(1)
         rec.dbm.getOccurrency( 3 ) should be(1)
         rec.dbm.getOccurrency( 4 ) should be(1)
-        val occurrencies = rec.dbm.getCoOccurrencies( 1, 3 ).sortBy( _._1 )
+        val occurrencies = rec.dbm.getCoOccurrencies( 1 ).sortBy( _._1 )
         occurrencies should be(
           List((2L, 1), (3L, 1), (4L, 1))
         )
@@ -71,7 +71,7 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
         rec.removePreferenceSet( List(123L, 456L).toSet )
         rec.dbm.getOccurrency( 123 ) should be( 0 )
         rec.dbm.getOccurrency( 456 ) should be( 0 )
-        rec.dbm.getCoOccurrencies( 123, 2 ) should be( Nil )
+        rec.dbm.getCoOccurrencies( 123 ) should be( Nil )
       }
 
       it("returns the removed set") {
@@ -88,7 +88,7 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
         rec.dbm.getOccurrency( 2 ) should be( 1 )
         rec.dbm.getOccurrency( 3 ) should be( 0 )
         rec.dbm.getOccurrency( 4 ) should be( 0 )
-        val occurrencies = rec.dbm.getCoOccurrencies( 1, 3 ).sortBy( _._1 )
+        val occurrencies = rec.dbm.getCoOccurrencies( 1 ).sortBy( _._1 )
         occurrencies should be(
           List( (2L, 1) )
         )
