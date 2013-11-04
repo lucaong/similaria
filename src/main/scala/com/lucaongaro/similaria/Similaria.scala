@@ -58,6 +58,20 @@ class Similaria( implicit val opts: Options ) extends CollaborativeFilter {
     }.take( limit )
   }
 
+  def getSimilarityBetween(
+    item:  Long,
+    other: Long
+  ): Double = {
+    val itemCount = dbm.getOccurrency( item )
+    if ( itemCount == 0 ) return 0.0
+
+    val otherCount = dbm.getOccurrency( other )
+    if ( otherCount == 0 ) return 0.0
+
+    val coCount = dbm.getCoOccurrency( item, other )
+    opts.similarity( itemCount, otherCount, coCount )
+  }
+
   def stats = {
     dbm.stats
   }

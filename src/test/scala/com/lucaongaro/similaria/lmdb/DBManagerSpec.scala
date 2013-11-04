@@ -53,6 +53,17 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
       }
     }
 
+    describe("getCoOccurrency") {
+      it("returns 0 if there is no co-occurrency") {
+        dbm.getCoOccurrency( 1, 2 ) should be( 0 )
+      }
+
+      it("returns the co-occurrency") {
+        dbm.incrementCoOccurrency( 1, 2, 3 )
+        dbm.getCoOccurrency( 1, 2 ) should be( 3 )
+      }
+    }
+
     describe("getCoOccurrencies") {
       it("returns empty list if there are none") {
         val coOcc = dbm.getCoOccurrencies( 123 )

@@ -100,7 +100,7 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
       }
     }
 
-    describe("getNeighborsOf") {
+    describe("findNeighborsOf") {
       it("gives recommendations on the basis of submitted preference sets") {
         rec.addPreferenceSet( List(123L, 456L, 789L).toSet )
         rec.addPreferenceSet( List(1L, 2L, 3L).toSet )
@@ -122,6 +122,19 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
         rec.addPreferenceSet( List(123L, 456L).toSet )
         val neighbors = rec.findNeighborsOf( 321 )
         neighbors.toList should be( Nil )
+      }
+    }
+
+    describe("getSimilarityBetween") {
+      it("returns 0.0 if the items never occurred together") {
+        rec.getSimilarityBetween( 123, 321 ) should be( 0.0 )
+      }
+
+      it("returns the similarity between two items") {
+        rec.addPreferenceSet( List(1L, 2L, 3L).toSet )
+        rec.addPreferenceSet( List(1L, 2L).toSet )
+        rec.getSimilarityBetween( 1, 2 ) should be( 1.0 )
+        rec.getSimilarityBetween( 1, 3 ) should be( 0.5 )
       }
     }
   }

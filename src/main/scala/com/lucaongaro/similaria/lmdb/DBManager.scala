@@ -40,6 +40,17 @@ class DBManager( dbPath: String, dbSize: Long ) {
     }
   }
 
+  def getCoOccurrency(
+    item:  Long,
+    other: Long
+  ): Long = {
+    val coKey = KeyKey( item, other )
+    rndDB.get( coKey ) match {
+      case Score( c ) => c
+      case _          => 0
+    }
+  }
+
   def getCoOccurrencies(
     item:  Long,
     limit: Integer = -1

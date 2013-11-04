@@ -25,4 +25,9 @@ trait CollaborativeFilter {
     item:  Long,
     limit: Integer
   ): SortedSet[Neighbor]
+
+  def getSimilarityBetween(
+    item:  Long,
+    other: Long
+  ): Double
 }
