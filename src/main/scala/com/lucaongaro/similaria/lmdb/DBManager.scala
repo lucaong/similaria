@@ -9,10 +9,13 @@ class DBManager( dbPath: String, dbSize: Long ) {
   env.setMaxDbs( 2 )
   env.open( dbPath, NOSYNC | WRITEMAP )
 
+  // rndDB is optimized for random access
+  // itrDB is optimized for iterating through co-occurrencies
   private val rndDB = env.openDatabase( "co-index", CREATE )
   private val itrDB = env.openDatabase( "co-occur",
     CREATE | DUPSORT | DUPFIXED )
 
+  // Get occurrency count for an item
   def getOccurrency(
     item: Long
   ): Long = {
@@ -23,6 +26,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
     }
   }
 
+  // Increment (or decrement) occurrency count for an item
   def incrementOccurrency(
     item:       Long,
     increment:  Long
@@ -40,6 +44,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
     }
   }
 
+  // Get co-occurrency count of a pair of items
   def getCoOccurrency(
     item:  Long,
     other: Long
@@ -51,6 +56,8 @@ class DBManager( dbPath: String, dbSize: Long ) {
     }
   }
 
+  // Get the items that occur most frequently with their
+  // given item, with their relative co-occurrency count
   def getCoOccurrencies(
     item:  Long,
     limit: Integer = -1
@@ -68,6 +75,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
     }
   }
 
+  // Increment (or decrement) the co-occurrency count for a pair of items
   def incrementCoOccurrency(
     itemA:     Long,
     itemB:     Long,
@@ -92,6 +100,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
     }
   }
 
+  // Get stats for the database
   def stats = {
     Map(
       "rndDB" -> statsFor( rndDB ),
@@ -99,10 +108,12 @@ class DBManager( dbPath: String, dbSize: Long ) {
     )
   }
 
+  // Hot copy of the current state of the database in another location
   def copy( path: String ) {
     env.copy( path )
   }
 
+  // Close database
   def close() {
     env.close()
   }

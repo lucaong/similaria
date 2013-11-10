@@ -5,10 +5,17 @@ import com.lucaongaro.similaria.lmdb._
 import scala.collection.SortedSet
 import java.io.File
 
-class Similaria( implicit val opts: Options ) extends CollaborativeFilter {
+class Similaria(
+  implicit
+  val opts:       Options,
+  val similarity: ( Long, Long, Long ) => Double =
+    ( a, b, ab ) => ab.toDouble / ( a + b - ab )
+) {
+
   type PrefSet = Set[Long]
   val dbm = new DBManager( opts.dbPath, opts.dbSize )
 
+  // Add preference set
   def addPreferenceSet(
     prefSet: PrefSet
   ) = {
@@ -16,6 +23,7 @@ class Similaria( implicit val opts: Options ) extends CollaborativeFilter {
     prefSet
   }
 
+  // Append subset to an already existing preference set
   def addToPreferenceSet(
     originalSet: PrefSet,
     setToAdd:    PrefSet
@@ -25,6 +33,7 @@ class Similaria( implicit val opts: Options ) extends CollaborativeFilter {
     originalSet | set
   }
 
+  // Remove prefernce set
   def removePreferenceSet(
     prefSet: PrefSet
   ) = {
@@ -32,6 +41,7 @@ class Similaria( implicit val opts: Options ) extends CollaborativeFilter {
     prefSet
   }
 
+  // Remove subset from existing preference set
   def removeFromPreferenceSet(
     originalSet: PrefSet,
     setToRemove: PrefSet
@@ -41,6 +51,7 @@ class Similaria( implicit val opts: Options ) extends CollaborativeFilter {
     originalSet &~ set
   }
 
+  // Find the items that are most similar to the given item
   def findNeighborsOf(
     item:  Long,
     limit: Integer = 20
@@ -53,11 +64,12 @@ class Similaria( implicit val opts: Options ) extends CollaborativeFilter {
     coOccurrencies.foldLeft( emptySet ) { ( set, coOcc ) =>
       val ( other, coCount ) = coOcc
       val otherCount = dbm.getOccurrency( other )
-      val sim = opts.similarity( itemCount, otherCount, coCount )
+      val sim = similarity( itemCount, otherCount, coCount )
       set + Neighbor( other, sim )
     }.take( limit )
   }
 
+  // Get similarity between two items
   def getSimilarityBetween(
     item:  Long,
     other: Long
@@ -69,13 +81,15 @@ class Similaria( implicit val opts: Options ) extends CollaborativeFilter {
     if ( otherCount == 0 ) return 0.0
 
     val coCount = dbm.getCoOccurrency( item, other )
-    opts.similarity( itemCount, otherCount, coCount )
+    similarity( itemCount, otherCount, coCount )
   }
 
+  // Get statistics on the database
   def stats = {
     dbm.stats
   }
 
+  // Graceful shutdown
   def shutdown() {
     dbm.close()
   }

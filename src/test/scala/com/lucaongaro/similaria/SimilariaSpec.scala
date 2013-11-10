@@ -16,9 +16,7 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
     file.mkdirs()
     FileUtils.cleanDirectory( file )
 
-    val similarity = ( a: Long, b: Long, ab: Long ) =>
-      ab.toDouble / ( a + b - ab )
-    implicit val opts = new Options( dbPath, 10485760, similarity )
+    implicit val opts = new Options( dbPath, 10485760 )
     rec = new Similaria()
     try
       test()
