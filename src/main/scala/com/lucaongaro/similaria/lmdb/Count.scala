@@ -3,13 +3,13 @@ package com.lucaongaro.similaria.lmdb
 import scala.language.implicitConversions
 import java.nio.ByteBuffer
 
-case class Score( value: Long ) {
+case class Count( value: Long ) {
   def +( increment: Long ) = {
-    Score( value + increment )
+    Count( value + increment )
   }
 }
 
-object Score {
+object Count {
   def unapply( bytes: Array[Byte] ) = {
     if ( bytes == null )
       None
@@ -19,8 +19,8 @@ object Score {
     }
   }
 
-  implicit def scoreToBytes( score: Score ) = {
+  implicit def scoreToBytes( count: Count ) = {
     val bb = ByteBuffer.allocate(8)
-    bb.putLong( score.value ).array()
+    bb.putLong( count.value ).array()
   }
 }

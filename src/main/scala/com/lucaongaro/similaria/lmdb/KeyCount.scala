@@ -4,27 +4,27 @@ import scala.language.implicitConversions
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-case class KeyScore(
+case class KeyCount(
   key:   Long,
-  score: Long
+  count: Long
 )
 
-object KeyScore {
+object KeyCount {
   def unapply( bytes: Array[Byte] ) = {
     if ( bytes == null )
       None
     else {
       val le    = ByteOrder.LITTLE_ENDIAN
-      val score = ByteBuffer.wrap( bytes.take(8) ).order( le ).getLong * -1
+      val count = ByteBuffer.wrap( bytes.take(8) ).order( le ).getLong * -1
       val key   = ByteBuffer.wrap( bytes.drop(8) ).order( le ).getLong
-      Some( (key, score) )
+      Some( (key, count) )
     }
   }
 
-  implicit def keyScoreToBytes( keyScore: KeyScore ) = {
+  implicit def keyCountToBytes( keyCount: KeyCount ) = {
     val bb = ByteBuffer.allocate(16)
     bb.order( ByteOrder.LITTLE_ENDIAN )
-    bb.putLong( -1 * keyScore.score )
-    bb.putLong( keyScore.key ).array()
+    bb.putLong( -1 * keyCount.count )
+    bb.putLong( keyCount.key ).array()
   }
 }

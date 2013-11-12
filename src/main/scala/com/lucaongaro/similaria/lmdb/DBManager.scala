@@ -24,7 +24,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
   ): Long = {
     val key = Key( item )
     rndDB.get( key ) match {
-      case Score( c ) => c
+      case Count( c ) => c
       case _          => 0
     }
   }
@@ -37,11 +37,11 @@ class DBManager( dbPath: String, dbSize: Long ) {
     transaction( false ) { tx =>
       val key     = Key( item )
       val updated = rndDB.get( tx, key ) match {
-        case Score( c ) => c + increment
+        case Count( c ) => c + increment
         case _          => increment
       }
       if ( updated > 0 )
-        rndDB.put( tx, key, Score( updated ) )
+        rndDB.put( tx, key, Count( updated ) )
       else
         rndDB.delete( tx, key )
     }
@@ -54,7 +54,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
   ): Long = {
     val coKey = KeyKey( item, other )
     rndDB.get( coKey ) match {
-      case Score( c ) => c
+      case Count( c ) => c
       case _          => 0
     }
   }
@@ -68,8 +68,8 @@ class DBManager( dbPath: String, dbSize: Long ) {
     withDupIterator( item, itrDB ) { i =>
       val tuples = i.map { next =>
         ( next.getValue ) match {
-          case KeyScore( key, score ) =>
-            ( key, score, getOccurrency( key ) )
+          case KeyCount( key, count ) =>
+            ( key, count, getOccurrency( key ) )
           case _ =>
             throw new InvalidDataPointException(
               s"One co-occurrency of item '$item' is invalid or corrupted")
@@ -91,16 +91,16 @@ class DBManager( dbPath: String, dbSize: Long ) {
     transaction( false ) { tx =>
       val coKey   = KeyKey( itemA, itemB )
       val current = rndDB.get( tx, coKey ) match {
-        case Score( c ) => c
+        case Count( c ) => c
         case _          => 0
       }
-      val score = current + increment
-      itrDB.delete( tx, Key( itemA ), KeyScore( itemB, current ) )
-      itrDB.delete( tx, Key( itemB ), KeyScore( itemA, current ) )
-      if ( score > 0 ) {
-        rndDB.put( tx, coKey, Score( score ) )
-        itrDB.put( tx, Key( itemA ), KeyScore( itemB, score ) )
-        itrDB.put( tx, Key( itemB ), KeyScore( itemA, score ) )
+      val count = current + increment
+      itrDB.delete( tx, Key( itemA ), KeyCount( itemB, current ) )
+      itrDB.delete( tx, Key( itemB ), KeyCount( itemA, current ) )
+      if ( count > 0 ) {
+        rndDB.put( tx, coKey, Count( count ) )
+        itrDB.put( tx, Key( itemA ), KeyCount( itemB, count ) )
+        itrDB.put( tx, Key( itemB ), KeyCount( itemA, count ) )
       } else {
         rndDB.delete( tx, coKey )
       }
