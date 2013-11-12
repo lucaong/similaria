@@ -4,6 +4,9 @@ import org.fusesource.lmdbjni._
 import org.fusesource.lmdbjni.Constants._
 
 class DBManager( dbPath: String, dbSize: Long ) {
+
+  class InvalidDataPointException( msg: String ) extends Exception( msg )
+
   private val env = new Env()
   env.setMapSize( dbSize )
   env.setMaxDbs( 2 )
@@ -64,8 +67,10 @@ class DBManager( dbPath: String, dbSize: Long ) {
   ): List[Tuple2[Long, Long]] = {
     withDupIterator( item, itrDB ) { i =>
       val tuples = i.map { next =>
-        ( next.getValue: @unchecked ) match {
+        ( next.getValue ) match {
           case KeyScore( key, score ) => ( key, score )
+          case _ => throw new InvalidDataPointException(
+            s"One co-occurrency of item '$item' has invalid or corrupted data")
         }
       }
       if ( limit < 0 )
