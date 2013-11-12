@@ -64,13 +64,15 @@ class DBManager( dbPath: String, dbSize: Long ) {
   def getCoOccurrencies(
     item:  Long,
     limit: Integer = -1
-  ): List[Tuple2[Long, Long]] = {
+  ): List[(Long, Long, Long)] = {
     withDupIterator( item, itrDB ) { i =>
       val tuples = i.map { next =>
         ( next.getValue ) match {
-          case KeyScore( key, score ) => ( key, score )
-          case _ => throw new InvalidDataPointException(
-            s"One co-occurrency of item '$item' has invalid or corrupted data")
+          case KeyScore( key, score ) =>
+            ( key, score, getOccurrency( key ) )
+          case _ =>
+            throw new InvalidDataPointException(
+              s"One co-occurrency of item '$item' is invalid or corrupted")
         }
       }
       if ( limit < 0 )

@@ -62,8 +62,7 @@ class Similaria(
     val emptySet       = SortedSet.empty[Neighbor]
 
     coOccurrencies.foldLeft( emptySet ) { ( set, coOcc ) =>
-      val ( other, coCount ) = coOcc
-      val otherCount = dbm.getOccurrency( other )
+      val ( other, coCount, otherCount ) = coOcc
       val sim = similarity( itemCount, otherCount, coCount )
       set + Neighbor( other, sim )
     }.take( limit )

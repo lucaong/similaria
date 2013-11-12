@@ -70,19 +70,21 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
         coOcc should be( Nil )
       }
 
-      it("returns a list of (key, score) tuples ordered by descending score") {
+      it("returns a list of (key, co-count, count) tuples ordered by descending score") {
+        dbm.incrementOccurrency( 213, 3 )
+        dbm.incrementOccurrency( 132, 2 )
+        dbm.incrementOccurrency( 312, 1 )
+
         dbm.incrementCoOccurrency( 123, 213, 1 )
         dbm.incrementCoOccurrency( 123, 132, 2 )
         dbm.incrementCoOccurrency( 123, 312, 3 )
+
         val coOcc = dbm.getCoOccurrencies( 123 )
         coOcc match {
           case one::two::three::Nil =>
-            one._1 should be( 312 )
-            one._2 should be( 3 )
-            two._1 should be( 132 )
-            two._2 should be( 2 )
-            three._1 should be( 213 )
-            three._2 should be( 1 )
+            one   should be( (312, 3, 1) )
+            two   should be( (132, 2, 2) )
+            three should be( (213, 1, 3) )
           case _ => println(coOcc); throw new Exception("unexpected result")
         }
       }
@@ -91,13 +93,12 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
         dbm.incrementCoOccurrency( 123, 456, 1 )
         dbm.incrementCoOccurrency( 123, 567, 2 )
         dbm.incrementCoOccurrency( 321, 789, 3 )
+
         val coOcc = dbm.getCoOccurrencies( 123 )
         coOcc match {
           case one::two::Nil =>
-            one._1 should be( 567 )
-            one._2 should be( 2 )
-            two._1 should be( 456 )
-            two._2 should be( 1 )
+            one should be( (567, 2, 0) )
+            two should be( (456, 1, 0) )
           case _ => println(coOcc); throw new Exception("unexpected result")
         }
       }
@@ -106,14 +107,13 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
         dbm.incrementCoOccurrency( 123, 456, 1 )
         dbm.incrementCoOccurrency( 123, 567, 2 )
         dbm.incrementCoOccurrency( 123, 789, 3 )
+
         val coOcc = dbm.getCoOccurrencies( 123, 2 )
         coOcc.length should be( 2 )
         coOcc match {
           case one::two::Nil =>
-            one._1 should be( 789 )
-            one._2 should be( 3 )
-            two._1 should be( 567 )
-            two._2 should be( 2 )
+            one should be( (789, 3, 0) )
+            two should be( (567, 2, 0) )
           case _ => println(coOcc); throw new Exception("unexpected result")
         }
       }
@@ -122,15 +122,15 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
     describe("incrementCoOccurrency") {
       it("increments co-occurrency for a pair of items") {
         dbm.incrementCoOccurrency( 123, 456, 3 )
-        dbm.getCoOccurrencies( 123 ) should be( List( (456L, 3) ) )
-        dbm.getCoOccurrencies( 456 ) should be( List( (123L, 3) ) )
+        dbm.getCoOccurrencies( 123 ) should be( List( (456L, 3, 0) ) )
+        dbm.getCoOccurrencies( 456 ) should be( List( (123L, 3, 0) ) )
       }
 
       it("decrements co-occurrency if given a negative increment") {
         dbm.incrementCoOccurrency( 123, 456, 3 )
         dbm.incrementCoOccurrency( 123, 456, -2 )
-        dbm.getCoOccurrencies( 123 ) should be( List( (456L, 1) ) )
-        dbm.getCoOccurrencies( 456 ) should be( List( (123L, 1) ) )
+        dbm.getCoOccurrencies( 123 ) should be( List( (456L, 1, 0) ) )
+        dbm.getCoOccurrencies( 456 ) should be( List( (123L, 1, 0) ) )
       }
 
       it("deletes co-occurrency if decremented to or below 0") {
@@ -154,6 +154,7 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
         FileUtils.cleanDirectory( copyFile )
 
         dbm.incrementOccurrency( 123, 3 )
+        dbm.incrementOccurrency( 456, 5 )
         dbm.incrementCoOccurrency( 123, 456, 2 )
         dbm.incrementCoOccurrency( 123, 789, 1 )
         dbm.copy( copyLocation )
@@ -162,7 +163,7 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
         try {
           copy.getOccurrency( 123 ) should be( 3 )
           copy.getCoOccurrencies( 123 ) should be(
-            List( (456L, 2), (789L, 1) )
+            List( (456L, 2, 5), (789L, 1, 0) )
           )
         } finally {
           copy.close()

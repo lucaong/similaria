@@ -33,7 +33,7 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
         rec.dbm.getOccurrency( 123 ) should be(1)
         rec.dbm.getOccurrency( 456 ) should be(1)
         rec.dbm.getCoOccurrencies( 123 ) should be(
-          List((456L, 1))
+          List((456L, 1, 1))
         )
       }
 
@@ -53,7 +53,7 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
         rec.dbm.getOccurrency( 4 ) should be(1)
         val occurrencies = rec.dbm.getCoOccurrencies( 1 ).sortBy( _._1 )
         occurrencies should be(
-          List((2L, 1), (3L, 1), (4L, 1))
+          List((2, 1, 1), (3, 1, 1), (4, 1, 1))
         )
       }
 
@@ -88,7 +88,7 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
         rec.dbm.getOccurrency( 4 ) should be( 0 )
         val occurrencies = rec.dbm.getCoOccurrencies( 1 ).sortBy( _._1 )
         occurrencies should be(
-          List( (2L, 1) )
+          List( (2, 1, 1) )
         )
       }
 
