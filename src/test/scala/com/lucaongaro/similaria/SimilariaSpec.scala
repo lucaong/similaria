@@ -114,7 +114,7 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
         }
       }
 
-      it("returns empty recomendation list if there is no such item") {
+      it("returns empty recommendation list if there is no such item") {
         rec.addPreferenceSet( List(123L, 456L, 789L).toSet )
         rec.addPreferenceSet( List(1L, 2L, 3L).toSet )
         rec.addPreferenceSet( List(123L, 456L).toSet )
@@ -133,6 +133,39 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
         rec.addPreferenceSet( List(1L, 2L).toSet )
         rec.getSimilarityBetween( 1, 2 ) should be( 1.0 )
         rec.getSimilarityBetween( 1, 3 ) should be( 0.5 )
+      }
+    }
+
+    describe("muteItem") {
+      it("prevents the item to appear in recommendation") {
+        rec.addPreferenceSet( List(1L, 2L, 3L, 4L).toSet )
+        rec.addPreferenceSet( List(1L, 2L, 3L).toSet )
+        rec.muteItem( 2 )
+        val neighbors = rec.findNeighborsOf( 1 )
+        neighbors.toList match {
+          case first :: second :: Nil =>
+            first.item  should be( 3 )
+            second.item should be( 4 )
+          case _ => throw new Exception("unexpected result")
+        }
+      }
+    }
+
+    describe("unmuteItem") {
+      it("allow the item to appear in recommendation") {
+        rec.addPreferenceSet( List(1L, 2L, 3L, 4L).toSet )
+        rec.addPreferenceSet( List(1L, 2L, 3L).toSet )
+        rec.addPreferenceSet( List(1L, 2L).toSet )
+        rec.muteItem( 2 )
+        rec.unmuteItem( 2 )
+        val neighbors = rec.findNeighborsOf( 1 )
+        neighbors.toList match {
+          case first :: second :: third :: Nil =>
+            first.item  should be( 2 )
+            second.item should be( 3 )
+            third.item  should be( 4 )
+          case _ => throw new Exception("unexpected result")
+        }
       }
     }
   }

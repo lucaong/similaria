@@ -83,6 +83,22 @@ class Similaria(
     similarity( itemCount, otherCount, coCount )
   }
 
+  // Mute an item (so that it is not considered
+  // when getting neighbors)
+  def muteItem(
+    item: Long
+  ) {
+    dbm.setMuted( item, true )
+  }
+
+  // Unmute an item (so that it is considered
+  // when getting neighbors)
+  def unmuteItem(
+    item: Long
+  ) {
+    dbm.setMuted( item, false )
+  }
+
   // Get statistics on the database
   def stats = {
     dbm.stats

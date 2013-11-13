@@ -85,7 +85,7 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
             one   should be( (312, 3, 1) )
             two   should be( (132, 2, 2) )
             three should be( (213, 1, 3) )
-          case _ => println(coOcc); throw new Exception("unexpected result")
+          case _ => throw new Exception("unexpected result")
         }
       }
 
@@ -99,7 +99,7 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
           case one::two::Nil =>
             one should be( (567, 2, 0) )
             two should be( (456, 1, 0) )
-          case _ => println(coOcc); throw new Exception("unexpected result")
+          case _ => throw new Exception("unexpected result")
         }
       }
 
@@ -114,7 +114,25 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
           case one::two::Nil =>
             one should be( (789, 3, 0) )
             two should be( (567, 2, 0) )
-          case _ => println(coOcc); throw new Exception("unexpected result")
+          case _ => throw new Exception("unexpected result")
+        }
+      }
+
+      it("only considers non-muted items") {
+        dbm.incrementCoOccurrency( 1, 2, 1 )
+        dbm.incrementCoOccurrency( 1, 3, 2 )
+        dbm.incrementCoOccurrency( 1, 4, 3 )
+        dbm.incrementCoOccurrency( 2, 5, 3 )
+        dbm.incrementOccurrency( 3, 1 )
+        dbm.setMuted( 3, true )
+
+        val coOcc = dbm.getCoOccurrencies( 1, 2 )
+        coOcc.length should be( 2 )
+        coOcc match {
+          case one::two::Nil =>
+            one should be( (4, 3, 0) )
+            two should be( (2, 1, 0) )
+          case _ => throw new Exception("unexpected result")
         }
       }
     }
@@ -141,6 +159,21 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
         dbm.incrementCoOccurrency( 123, 456, -2 )
         dbm.getCoOccurrencies( 123 ) should be( Nil )
         dbm.getCoOccurrencies( 456 ) should be( Nil )
+      }
+    }
+
+    describe("setMuted") {
+      it("sets the active state of the given item") {
+        dbm.incrementOccurrency( 123, 3 )
+        dbm.setMuted( 123, true )
+        dbm.getOccurrencyUnlessMuted( 123 ) should be( None )
+        dbm.setMuted( 123, false )
+        dbm.getOccurrencyUnlessMuted( 123 ) should be( Some(3) )
+      }
+
+      it("has no effect if the item had no occurrency") {
+        dbm.setMuted( 123, true )
+        dbm.getOccurrencyUnlessMuted( 123 ) should be( Some(0) )
       }
     }
 

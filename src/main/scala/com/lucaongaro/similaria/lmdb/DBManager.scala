@@ -5,7 +5,7 @@ import org.fusesource.lmdbjni.Constants._
 
 class DBManager( dbPath: String, dbSize: Long ) {
 
-  class InvalidDataPointException( msg: String ) extends Exception( msg )
+  class InvalidDataPointException extends Exception
 
   private val env = new Env()
   env.setMapSize( dbSize )
@@ -24,24 +24,35 @@ class DBManager( dbPath: String, dbSize: Long ) {
   ): Long = {
     val key = Key( item )
     rndDB.get( key ) match {
-      case Count( c ) => c
-      case _          => 0
+      case CountMuted( c, _ ) => c
+      case _                  => 0
+    }
+  }
+
+  // Get occurrency count if the item is active
+  def getOccurrencyUnlessMuted(
+    key: Long
+  ): Option[Long] = {
+    rndDB.get( Key( key ) ) match {
+      case CountMuted( c, false ) => Some( c )
+      case CountMuted( c, true )  => None
+      case _                      => Some( 0 )
     }
   }
 
   // Increment (or decrement) occurrency count for an item
   def incrementOccurrency(
-    item:       Long,
-    increment:  Long
+    item:      Long,
+    increment: Long
   ) {
     transaction( false ) { tx =>
       val key     = Key( item )
       val updated = rndDB.get( tx, key ) match {
-        case Count( c ) => c + increment
-        case _          => increment
+        case CountMuted( c, a ) => CountMuted( c + increment, a )
+        case _                  => CountMuted( increment, false )
       }
-      if ( updated > 0 )
-        rndDB.put( tx, key, Count( updated ) )
+      if ( updated.count > 0 )
+        rndDB.put( tx, key, updated )
       else
         rndDB.delete( tx, key )
     }
@@ -60,21 +71,14 @@ class DBManager( dbPath: String, dbSize: Long ) {
   }
 
   // Get the items that occur most frequently with their
-  // given item, with their relative co-occurrency count
+  // given item, with their relative co-occurrency count,
+  // filtering only active items.
   def getCoOccurrencies(
     item:  Long,
-    limit: Integer = -1
+    limit: Int = -1
   ): List[(Long, Long, Long)] = {
     withDupIterator( item, itrDB ) { i =>
-      val tuples = i.map { next =>
-        ( next.getValue ) match {
-          case KeyCount( key, count ) =>
-            ( key, count, getOccurrency( key ) )
-          case _ =>
-            throw new InvalidDataPointException(
-              s"One co-occurrency of item '$item' is invalid or corrupted")
-        }
-      }
+      val tuples = nonMutedCoOccurrencies( i )
       if ( limit < 0 )
         tuples.toList
       else
@@ -103,6 +107,20 @@ class DBManager( dbPath: String, dbSize: Long ) {
         itrDB.put( tx, Key( itemB ), KeyCount( itemA, count ) )
       } else {
         rndDB.delete( tx, coKey )
+      }
+    }
+  }
+
+  def setMuted(
+    item:   Long,
+    active: Boolean
+  ) {
+    transaction( false ) { tx =>
+      val key = Key( item )
+      rndDB.get( tx, key ) match {
+        case CountMuted( c, _ ) =>
+          rndDB.put( tx, key, CountMuted( c, active ) )
+        case _                   => // no-op
       }
     }
   }
@@ -157,6 +175,22 @@ class DBManager( dbPath: String, dbSize: Long ) {
       else
         tx.abort()
     }
+  }
+
+  private def nonMutedCoOccurrencies(
+    iter: DupIterator
+  ) = {
+    iter.map { dup =>
+      dup.getValue match {
+        case KeyCount( key, coCount ) =>
+          getOccurrencyUnlessMuted( key ) match {
+            case Some( count ) => ( key, coCount, count )
+            case None          => null
+          }
+        case _ =>
+          throw new InvalidDataPointException
+      }
+    }.filter( _ != null )
   }
 
   private def statsFor( db: Database ) = {

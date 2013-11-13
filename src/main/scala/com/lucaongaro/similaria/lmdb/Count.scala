@@ -19,7 +19,7 @@ object Count {
     }
   }
 
-  implicit def scoreToBytes( count: Count ) = {
+  implicit def countToBytes( count: Count ) = {
     val bb = ByteBuffer.allocate(8)
     bb.putLong( count.value ).array()
   }
