@@ -163,7 +163,7 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
     }
 
     describe("setMuted") {
-      it("sets the active state of the given item") {
+      it("sets the muted state of the given item") {
         dbm.incrementOccurrency( 123, 3 )
         dbm.setMuted( 123, true )
         dbm.getOccurrencyUnlessMuted( 123 ) should be( None )
