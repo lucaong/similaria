@@ -29,7 +29,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
     }
   }
 
-  // Get occurrency count if the item is active
+  // Get occurrency count unless the item is muted
   def getOccurrencyUnlessMuted(
     key: Long
   ): Option[Long] = {
@@ -120,7 +120,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
       rndDB.get( tx, key ) match {
         case CountMuted( c, _ ) =>
           rndDB.put( tx, key, CountMuted( c, active ) )
-        case _                   => // no-op
+        case _                  => // no-op
       }
     }
   }
