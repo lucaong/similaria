@@ -8,11 +8,11 @@ import java.io.File
 class Similaria(
   implicit
   val opts:       Options,
-  val similarity: ( Long, Long, Long ) => Double =
+  val similarity: ( Int, Int, Int ) => Double =
     ( a, b, ab ) => ab.toDouble / ( a + b - ab )
 ) {
 
-  type PrefSet = Set[Long]
+  type PrefSet = Set[Int]
   val dbm = new DBManager( opts.dbPath, opts.dbSize )
 
   // Add preference set
@@ -53,8 +53,8 @@ class Similaria(
 
   // Find the items that are most similar to the given item
   def findNeighborsOf(
-    item:  Long,
-    limit: Integer = 20
+    item:  Int,
+    limit: Int = 20
   ) = {
     val n              = if ( limit > 50 ) limit * 2 else 100
     val coOccurrencies = dbm.getCoOccurrencies( item, n )
@@ -70,8 +70,8 @@ class Similaria(
 
   // Get similarity between two items
   def getSimilarityBetween(
-    item:  Long,
-    other: Long
+    item:  Int,
+    other: Int
   ): Double = {
     val itemCount = dbm.getOccurrency( item )
     if ( itemCount == 0 ) return 0.0
@@ -86,7 +86,7 @@ class Similaria(
   // Mute an item (so that it is not considered
   // when getting neighbors)
   def muteItem(
-    item: Long
+    item: Int
   ) {
     dbm.setMuted( item, true )
   }
@@ -94,7 +94,7 @@ class Similaria(
   // Unmute an item (so that it is considered
   // when getting neighbors)
   def unmuteItem(
-    item: Long
+    item: Int
   ) {
     dbm.setMuted( item, false )
   }
@@ -113,7 +113,7 @@ class Similaria(
 
   private def incrementSet(
     set:       PrefSet,
-    increment: Long
+    increment: Int
   ) {
     set.subsets(2).map( _.toList ).foreach {
       case item1 :: item2 :: Nil =>
@@ -128,7 +128,7 @@ class Similaria(
   private def incrementSubset(
     originalSet: PrefSet,
     subset:      PrefSet,
-    increment:   Long
+    increment:   Int
   ) {
     incrementSet( subset, increment )
     for ( orig <- originalSet; item <- subset ) {

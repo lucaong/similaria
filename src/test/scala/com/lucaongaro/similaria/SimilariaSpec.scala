@@ -29,24 +29,24 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
   describe("Similaria") {
     describe("addPreferenceSet") {
       it("increments occurrencies and co-occurencies for set") {
-        rec.addPreferenceSet( List(123L, 456L).toSet )
+        rec.addPreferenceSet( List(123, 456).toSet )
         rec.dbm.getOccurrency( 123 ) should be(1)
         rec.dbm.getOccurrency( 456 ) should be(1)
         rec.dbm.getCoOccurrencies( 123 ) should be(
-          List((456L, 1, 1))
+          List((456, 1, 1))
         )
       }
 
       it("returns the added set") {
-        val set = rec.addPreferenceSet( List(123L, 456L).toSet )
-        set should be( List(123L, 456L).toSet )
+        val set = rec.addPreferenceSet( List(123, 456).toSet )
+        set should be( List(123, 456).toSet )
       }
     }
 
     describe("addToPreferenceSet") {
       it("appends to a pre-existing preference set") {
-        rec.addPreferenceSet( List(1L, 2L).toSet )
-        rec.addToPreferenceSet( List(1L, 2L).toSet, List(3L, 4L).toSet )
+        rec.addPreferenceSet( List(1, 2).toSet )
+        rec.addToPreferenceSet( List(1, 2).toSet, List(3, 4).toSet )
         rec.dbm.getOccurrency( 1 ) should be(1)
         rec.dbm.getOccurrency( 2 ) should be(1)
         rec.dbm.getOccurrency( 3 ) should be(1)
@@ -58,30 +58,30 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
       }
 
       it("returns the resulting set") {
-        val set = rec.addToPreferenceSet( List(1L, 2L).toSet, List(3L, 4L).toSet )
-        set should be( List(1L, 2L, 3L, 4L).toSet )
+        val set = rec.addToPreferenceSet( List(1, 2).toSet, List(3, 4).toSet )
+        set should be( List(1, 2, 3, 4).toSet )
       }
     }
 
     describe("removePreferenceSet") {
       it("decrements occurrencies and co-occurencies for set") {
-        rec.addPreferenceSet( List(123L, 456L).toSet )
-        rec.removePreferenceSet( List(123L, 456L).toSet )
+        rec.addPreferenceSet( List(123, 456).toSet )
+        rec.removePreferenceSet( List(123, 456).toSet )
         rec.dbm.getOccurrency( 123 ) should be( 0 )
         rec.dbm.getOccurrency( 456 ) should be( 0 )
         rec.dbm.getCoOccurrencies( 123 ) should be( Nil )
       }
 
       it("returns the removed set") {
-        val set = rec.removePreferenceSet( List(123L, 456L).toSet )
-        set should be( List(123L, 456L).toSet )
+        val set = rec.removePreferenceSet( List(123, 456).toSet )
+        set should be( List(123, 456).toSet )
       }
     }
 
     describe("removeFromPreferenceSet") {
       it("remove items from a pre-existing preference set") {
-        rec.addPreferenceSet( List(1L, 2L, 3L, 4L).toSet )
-        rec.removeFromPreferenceSet( List(1L, 2L, 3L, 4L).toSet, List(3L, 4L).toSet )
+        rec.addPreferenceSet( List(1, 2, 3, 4).toSet )
+        rec.removeFromPreferenceSet( List(1, 2, 3, 4).toSet, List(3, 4).toSet )
         rec.dbm.getOccurrency( 1 ) should be( 1 )
         rec.dbm.getOccurrency( 2 ) should be( 1 )
         rec.dbm.getOccurrency( 3 ) should be( 0 )
@@ -93,16 +93,16 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
       }
 
       it("returns the resulting set") {
-        val set = rec.removeFromPreferenceSet( List(1L, 2L, 3L, 4L).toSet, List(3L, 4L).toSet )
-        set should be( List(1L, 2L).toSet )
+        val set = rec.removeFromPreferenceSet( List(1, 2, 3, 4).toSet, List(3, 4).toSet )
+        set should be( List(1, 2).toSet )
       }
     }
 
     describe("findNeighborsOf") {
       it("gives recommendations on the basis of submitted preference sets") {
-        rec.addPreferenceSet( List(123L, 456L, 789L).toSet )
-        rec.addPreferenceSet( List(1L, 2L, 3L).toSet )
-        rec.addPreferenceSet( List(123L, 456L).toSet )
+        rec.addPreferenceSet( List(123, 456, 789).toSet )
+        rec.addPreferenceSet( List(1, 2, 3).toSet )
+        rec.addPreferenceSet( List(123, 456).toSet )
         val neighbors = rec.findNeighborsOf( 123 )
         neighbors.toList match {
           case first :: second :: Nil =>
@@ -115,9 +115,9 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
       }
 
       it("returns empty recommendation list if there is no such item") {
-        rec.addPreferenceSet( List(123L, 456L, 789L).toSet )
-        rec.addPreferenceSet( List(1L, 2L, 3L).toSet )
-        rec.addPreferenceSet( List(123L, 456L).toSet )
+        rec.addPreferenceSet( List(123, 456, 789).toSet )
+        rec.addPreferenceSet( List(1, 2, 3).toSet )
+        rec.addPreferenceSet( List(123, 456).toSet )
         val neighbors = rec.findNeighborsOf( 321 )
         neighbors.toList should be( Nil )
       }
@@ -129,8 +129,8 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
       }
 
       it("returns the similarity between two items") {
-        rec.addPreferenceSet( List(1L, 2L, 3L).toSet )
-        rec.addPreferenceSet( List(1L, 2L).toSet )
+        rec.addPreferenceSet( List(1, 2, 3).toSet )
+        rec.addPreferenceSet( List(1, 2).toSet )
         rec.getSimilarityBetween( 1, 2 ) should be( 1.0 )
         rec.getSimilarityBetween( 1, 3 ) should be( 0.5 )
       }
@@ -138,8 +138,8 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
 
     describe("muteItem") {
       it("prevents the item to appear in recommendation") {
-        rec.addPreferenceSet( List(1L, 2L, 3L, 4L).toSet )
-        rec.addPreferenceSet( List(1L, 2L, 3L).toSet )
+        rec.addPreferenceSet( List(1, 2, 3, 4).toSet )
+        rec.addPreferenceSet( List(1, 2, 3).toSet )
         rec.muteItem( 2 )
         val neighbors = rec.findNeighborsOf( 1 )
         neighbors.toList match {
@@ -153,9 +153,9 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
 
     describe("unmuteItem") {
       it("allow the item to appear in recommendation") {
-        rec.addPreferenceSet( List(1L, 2L, 3L, 4L).toSet )
-        rec.addPreferenceSet( List(1L, 2L, 3L).toSet )
-        rec.addPreferenceSet( List(1L, 2L).toSet )
+        rec.addPreferenceSet( List(1, 2, 3, 4).toSet )
+        rec.addPreferenceSet( List(1, 2, 3).toSet )
+        rec.addPreferenceSet( List(1, 2).toSet )
         rec.muteItem( 2 )
         rec.unmuteItem( 2 )
         val neighbors = rec.findNeighborsOf( 1 )

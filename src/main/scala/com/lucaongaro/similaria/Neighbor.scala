@@ -1,6 +1,6 @@
 package com.lucaongaro.similaria
 
-case class Neighbor( item: Long, similarity: Double )
+case class Neighbor( item: Int, similarity: Double )
 
 object Neighbor {
   // Default ordering is by descending similarity

@@ -20,8 +20,8 @@ class DBManager( dbPath: String, dbSize: Long ) {
 
   // Get occurrency count for an item
   def getOccurrency(
-    item: Long
-  ): Long = {
+    item: Int
+  ): Int = {
     val key = Key( item )
     rndDB.get( key ) match {
       case CountMuted( c, _ ) => c
@@ -31,8 +31,8 @@ class DBManager( dbPath: String, dbSize: Long ) {
 
   // Get occurrency count unless the item is muted
   def getOccurrencyUnlessMuted(
-    key: Long
-  ): Option[Long] = {
+    key: Int
+  ): Option[Int] = {
     rndDB.get( Key( key ) ) match {
       case CountMuted( c, false ) => Some( c )
       case CountMuted( c, true )  => None
@@ -42,8 +42,8 @@ class DBManager( dbPath: String, dbSize: Long ) {
 
   // Increment (or decrement) occurrency count for an item
   def incrementOccurrency(
-    item:      Long,
-    increment: Long
+    item:      Int,
+    increment: Int
   ) {
     transaction( false ) { tx =>
       val key     = Key( item )
@@ -60,9 +60,9 @@ class DBManager( dbPath: String, dbSize: Long ) {
 
   // Get co-occurrency count of a pair of items
   def getCoOccurrency(
-    item:  Long,
-    other: Long
-  ): Long = {
+    item:  Int,
+    other: Int
+  ): Int = {
     val coKey = KeyKey( item, other )
     rndDB.get( coKey ) match {
       case Count( c ) => c
@@ -74,9 +74,9 @@ class DBManager( dbPath: String, dbSize: Long ) {
   // given item, with their relative co-occurrency count,
   // filtering only active items.
   def getCoOccurrencies(
-    item:  Long,
+    item:  Int,
     limit: Int = -1
-  ): List[(Long, Long, Long)] = {
+  ): List[(Int, Int, Int)] = {
     withDupIterator( item, itrDB ) { i =>
       val tuples = nonMutedCoOccurrencies( i )
       if ( limit < 0 )
@@ -88,9 +88,9 @@ class DBManager( dbPath: String, dbSize: Long ) {
 
   // Increment (or decrement) the co-occurrency count for a pair of items
   def incrementCoOccurrency(
-    itemA:     Long,
-    itemB:     Long,
-    increment: Long
+    itemA:     Int,
+    itemB:     Int,
+    increment: Int
   ) {
     transaction( false ) { tx =>
       val coKey   = KeyKey( itemA, itemB )
@@ -112,7 +112,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
   }
 
   def setMuted(
-    item:   Long,
+    item:   Int,
     active: Boolean
   ) {
     transaction( false ) { tx =>
@@ -146,7 +146,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
   // Private methods
 
   private def withDupIterator[T](
-    start:    Long,
+    start:    Int,
     db:       Database,
     readonly: Boolean = true
   )( block: DupIterator => T ): T = {

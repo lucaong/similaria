@@ -140,15 +140,15 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
     describe("incrementCoOccurrency") {
       it("increments co-occurrency for a pair of items") {
         dbm.incrementCoOccurrency( 123, 456, 3 )
-        dbm.getCoOccurrencies( 123 ) should be( List( (456L, 3, 0) ) )
-        dbm.getCoOccurrencies( 456 ) should be( List( (123L, 3, 0) ) )
+        dbm.getCoOccurrencies( 123 ) should be( List( (456, 3, 0) ) )
+        dbm.getCoOccurrencies( 456 ) should be( List( (123, 3, 0) ) )
       }
 
       it("decrements co-occurrency if given a negative increment") {
         dbm.incrementCoOccurrency( 123, 456, 3 )
         dbm.incrementCoOccurrency( 123, 456, -2 )
-        dbm.getCoOccurrencies( 123 ) should be( List( (456L, 1, 0) ) )
-        dbm.getCoOccurrencies( 456 ) should be( List( (123L, 1, 0) ) )
+        dbm.getCoOccurrencies( 123 ) should be( List( (456, 1, 0) ) )
+        dbm.getCoOccurrencies( 456 ) should be( List( (123, 1, 0) ) )
       }
 
       it("deletes co-occurrency if decremented to or below 0") {
@@ -196,7 +196,7 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
         try {
           copy.getOccurrency( 123 ) should be( 3 )
           copy.getCoOccurrencies( 123 ) should be(
-            List( (456L, 2, 5), (789L, 1, 0) )
+            List( (456, 2, 5), (789, 1, 0) )
           )
         } finally {
           copy.close()

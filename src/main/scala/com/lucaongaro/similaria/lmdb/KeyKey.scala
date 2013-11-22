@@ -4,8 +4,8 @@ import scala.language.implicitConversions
 import java.nio.ByteBuffer
 
 case class KeyKey(
-  keyA: Long,
-  keyB: Long
+  keyA: Int,
+  keyB: Int
 )
 
 object KeyKey {
@@ -13,17 +13,17 @@ object KeyKey {
     if ( bytes == null )
       None
     else {
-      val keyA = ByteBuffer.wrap( bytes.take(8) ).getLong
-      val keyB = ByteBuffer.wrap( bytes.drop(8) ).getLong
+      val keyA = ByteBuffer.wrap( bytes.take(4) ).getInt
+      val keyB = ByteBuffer.wrap( bytes.drop(4) ).getInt
       Some( (keyA, keyB) )
     }
   }
 
   implicit def keyKeyToBytes( keyKey: KeyKey ) = {
-    val bb = ByteBuffer.allocate(16)
+    val bb = ByteBuffer.allocate(8)
     ( keyKey.keyA :: keyKey.keyB :: Nil ).sorted match {
       case List( low, high ) =>
-        bb.putLong( low ).putLong( high ).array()
+        bb.putInt( low ).putInt( high ).array()
     }
   }
 }

@@ -5,8 +5,8 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 case class KeyCount(
-  key:   Long,
-  count: Long
+  key:   Int,
+  count: Int
 )
 
 object KeyCount {
@@ -15,16 +15,16 @@ object KeyCount {
       None
     else {
       val le    = ByteOrder.LITTLE_ENDIAN
-      val count = ByteBuffer.wrap( bytes.take(8) ).order( le ).getLong * -1
-      val key   = ByteBuffer.wrap( bytes.drop(8) ).order( le ).getLong
+      val count = ByteBuffer.wrap( bytes.take(4) ).order( le ).getInt * -1
+      val key   = ByteBuffer.wrap( bytes.drop(4) ).order( le ).getInt
       Some( (key, count) )
     }
   }
 
   implicit def keyCountToBytes( keyCount: KeyCount ) = {
-    val bb = ByteBuffer.allocate(16)
+    val bb = ByteBuffer.allocate(8)
     bb.order( ByteOrder.LITTLE_ENDIAN )
-    bb.putLong( -1 * keyCount.count )
-    bb.putLong( keyCount.key ).array()
+    bb.putInt( -1 * keyCount.count )
+    bb.putInt( keyCount.key ).array()
   }
 }

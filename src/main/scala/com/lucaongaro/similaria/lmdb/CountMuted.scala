@@ -7,10 +7,10 @@ import java.nio.ByteBuffer
 // Since counts can only be positive, the sign is used for the active flag:
 // positive means active, negative means inactive.
 case class CountMuted(
-  count:   Long,
+  count:   Int,
   isMuted: Boolean
 ) {
-  def +( increment: Long ) = {
+  def +( increment: Int ) = {
     CountMuted( count + increment, isMuted )
   }
 }
@@ -20,14 +20,14 @@ object CountMuted {
     if ( bytes == null )
       None
     else {
-      val value = ByteBuffer.wrap( bytes ).getLong
+      val value = ByteBuffer.wrap( bytes ).getInt
       Some( (value.abs, value < 0) )
     }
   }
 
   implicit def countMutedToBytes( ca: CountMuted ) = {
-    val bb = ByteBuffer.allocate(8)
+    val bb = ByteBuffer.allocate(4)
     val s  = if ( ca.isMuted ) -1 else 1
-    bb.putLong( ca.count * s ).array()
+    bb.putInt( ca.count * s ).array()
   }
 }
