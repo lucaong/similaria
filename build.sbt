@@ -1,7 +1,5 @@
 import AssemblyKeys._
 
-Nobootcp.settings
-
 assemblySettings
 
 test in assembly := {}
@@ -23,3 +21,5 @@ libraryDependencies += "org.fusesource.lmdbjni" % "lmdbjni-all" % "99-master-SNA
 libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 
 libraryDependencies += "commons-io" % "commons-io" % "2.3" % "test"
+
+fork := true
