@@ -15,7 +15,7 @@ class Similaria(
   type PrefSet = Set[Int]
   val dbm = new DBManager( opts.dbPath, opts.dbSize )
 
-  /** Adds preference set */
+  /** Adds a preference set */
   def addPreferenceSet(
     prefSet: PrefSet
   ) = {
@@ -23,7 +23,7 @@ class Similaria(
     prefSet
   }
 
-  /** Appends subset to an already existing preference set */
+  /** Appends a subset to an already existing preference set */
   def addToPreferenceSet(
     originalSet: PrefSet,
     setToAdd:    PrefSet
@@ -33,7 +33,7 @@ class Similaria(
     originalSet | set
   }
 
-  /** Removes prefernce set */
+  /** Removes a preference set */
   def removePreferenceSet(
     prefSet: PrefSet
   ) = {
@@ -41,7 +41,7 @@ class Similaria(
     prefSet
   }
 
-  /** Removes subset from existing preference set */
+  /** Removes a subset from an existing preference set */
   def removeFromPreferenceSet(
     originalSet: PrefSet,
     setToRemove: PrefSet
