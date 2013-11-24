@@ -18,7 +18,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
   private val itrDB = env.openDatabase( "co-occur",
     CREATE | DUPSORT | DUPFIXED )
 
-  // Get occurrency count for an item
+  /** Returns the occurrency count for the given item */
   def getOccurrency(
     item: Int
   ): Int = {
@@ -29,7 +29,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
     }
   }
 
-  // Get occurrency count unless the item is muted
+  /** Returns the occurrency count unless the item is muted */
   def getOccurrencyUnlessMuted(
     key: Int
   ): Option[Int] = {
@@ -40,7 +40,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
     }
   }
 
-  // Increment (or decrement) occurrency count for an item
+  /** Increments (or decrements) the occurrency count for the given item */
   def incrementOccurrency(
     item:      Int,
     increment: Int
@@ -58,7 +58,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
     }
   }
 
-  // Get co-occurrency count of a pair of items
+  /** Returns the co-occurrency count for the given pair of items */
   def getCoOccurrency(
     item:  Int,
     other: Int
@@ -70,9 +70,9 @@ class DBManager( dbPath: String, dbSize: Long ) {
     }
   }
 
-  // Get the items that occur most frequently with their
-  // given item, with their relative co-occurrency count,
-  // filtering only active items.
+  /** Returns a list of the items that occur most frequently with the given
+    * item, along with their relative co-occurrency and occurrency count,
+    * filtering only active items. */
   def getCoOccurrencies(
     item:  Int,
     limit: Int = -1
@@ -86,7 +86,8 @@ class DBManager( dbPath: String, dbSize: Long ) {
     }
   }
 
-  // Increment (or decrement) the co-occurrency count for a pair of items
+  /** Increments (or decrements) the co-occurrency count for the given
+    * pair of items */
   def incrementCoOccurrency(
     itemA:     Int,
     itemB:     Int,
@@ -111,21 +112,22 @@ class DBManager( dbPath: String, dbSize: Long ) {
     }
   }
 
+  /** Mutes/unmutes the given item */
   def setMuted(
-    item:   Int,
-    active: Boolean
+    item:  Int,
+    muted: Boolean
   ) {
     transaction( false ) { tx =>
       val key = Key( item )
       rndDB.get( tx, key ) match {
         case CountMuted( c, _ ) =>
-          rndDB.put( tx, key, CountMuted( c, active ) )
+          rndDB.put( tx, key, CountMuted( c, muted ) )
         case _                  => // no-op
       }
     }
   }
 
-  // Get stats for the database
+  /** Returns statistics for the database */
   def stats = {
     Map(
       "rndDB" -> statsFor( rndDB ),
@@ -133,12 +135,12 @@ class DBManager( dbPath: String, dbSize: Long ) {
     )
   }
 
-  // Hot copy of the current state of the database in another location
+  /** Makes a copy of the current state of the database in another location */
   def copy( path: String ) {
     env.copy( path )
   }
 
-  // Close database
+  /** Closes database */
   def close() {
     env.close()
   }

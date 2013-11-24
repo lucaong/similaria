@@ -15,7 +15,7 @@ class Similaria(
   type PrefSet = Set[Int]
   val dbm = new DBManager( opts.dbPath, opts.dbSize )
 
-  // Add preference set
+  /** Adds preference set */
   def addPreferenceSet(
     prefSet: PrefSet
   ) = {
@@ -23,7 +23,7 @@ class Similaria(
     prefSet
   }
 
-  // Append subset to an already existing preference set
+  /** Appends subset to an already existing preference set */
   def addToPreferenceSet(
     originalSet: PrefSet,
     setToAdd:    PrefSet
@@ -33,7 +33,7 @@ class Similaria(
     originalSet | set
   }
 
-  // Remove prefernce set
+  /** Removes prefernce set */
   def removePreferenceSet(
     prefSet: PrefSet
   ) = {
@@ -41,7 +41,7 @@ class Similaria(
     prefSet
   }
 
-  // Remove subset from existing preference set
+  /** Removes subset from existing preference set */
   def removeFromPreferenceSet(
     originalSet: PrefSet,
     setToRemove: PrefSet
@@ -51,7 +51,7 @@ class Similaria(
     originalSet &~ set
   }
 
-  // Find the items that are most similar to the given item
+  /** Returns the nearest neighbors of the given item */
   def findNeighborsOf(
     item:  Int,
     limit: Int = 20
@@ -68,7 +68,7 @@ class Similaria(
     }.take( limit )
   }
 
-  // Get similarity between two items
+  /** Returns the similarity between two items */
   def getSimilarityBetween(
     item:  Int,
     other: Int
@@ -83,28 +83,26 @@ class Similaria(
     similarity( itemCount, otherCount, coCount )
   }
 
-  // Mute an item (so that it is not considered
-  // when getting neighbors)
+  /** Mutes an item (so that it is not considered when getting neighbors) */
   def muteItem(
     item: Int
   ) {
     dbm.setMuted( item, true )
   }
 
-  // Unmute an item (so that it is considered
-  // when getting neighbors)
+  /** Unmutes an item (so that it is considered when getting neighbors) */
   def unmuteItem(
     item: Int
   ) {
     dbm.setMuted( item, false )
   }
 
-  // Get statistics on the database
+  /** Returns statistics on the database */
   def stats = {
     dbm.stats
   }
 
-  // Graceful shutdown
+  /** Graceful shutdown */
   def shutdown() {
     dbm.close()
   }
