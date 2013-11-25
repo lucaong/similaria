@@ -5,6 +5,19 @@ import com.lucaongaro.similaria.lmdb._
 import scala.collection.SortedSet
 import java.io.File
 
+/** The main class to use, implements a recommendation engine using
+  * item-based collaborative filtering
+  *
+  * Items are represented as integer IDs, and the recommendation engine is
+  * trained by submitting sets of items occurring together (a.k.a. preference
+  * sets)
+  *
+  * @constructor create a new instance of the recommendation engine
+  * @param opts the configuration options
+  * @param similarity the measure of similarity between two items, which is a
+  *        function receiving the occurrency count of each of the two items
+  *        and their co-occurrency count. The default is Jaccard similarity
+  */
 class Similaria(
   implicit
   val opts:       Options,
@@ -15,7 +28,11 @@ class Similaria(
   type PrefSet = Set[Int]
   val dbm = new DBManager( opts.dbPath, opts.dbSize )
 
-  /** Adds a preference set */
+  /** Adds a preference set
+    *
+    * @param prefSet the preference set to be added
+    * @return the set that was added
+    */
   def addPreferenceSet(
     prefSet: PrefSet
   ) = {
@@ -23,7 +40,12 @@ class Similaria(
     prefSet
   }
 
-  /** Appends a subset to an already existing preference set */
+  /** Appends a subset to an already existing preference set
+    *
+    * @param originalSet the pre-existing set
+    * @param setToAdd the subset to be added
+    * @return the resulting set
+    */
   def addToPreferenceSet(
     originalSet: PrefSet,
     setToAdd:    PrefSet
@@ -33,7 +55,11 @@ class Similaria(
     originalSet | set
   }
 
-  /** Removes a preference set */
+  /** Removes a preference set
+    *
+    * @param prefSet the preference set to be removed
+    * @return the set that was removed
+    */
   def removePreferenceSet(
     prefSet: PrefSet
   ) = {
@@ -41,7 +67,12 @@ class Similaria(
     prefSet
   }
 
-  /** Removes a subset from an existing preference set */
+  /** Removes a subset from an existing preference set
+    *
+    * @param originalSet the pre-existing set
+    * @param setToRemove the subset to be removed
+    * @return the resulting set
+    */
   def removeFromPreferenceSet(
     originalSet: PrefSet,
     setToRemove: PrefSet
@@ -51,7 +82,12 @@ class Similaria(
     originalSet &~ set
   }
 
-  /** Returns the nearest neighbors of the given item */
+  /** Returns the nearest neighbors of the given item
+    *
+    * @param item the reference item
+    * @param limit the maximum number of neighbors to retrieve
+    * @return a list of the nearest neighbors
+    */
   def findNeighborsOf(
     item:  Int,
     limit: Int = 20
@@ -64,11 +100,16 @@ class Similaria(
     coOccurrencies.foldLeft( emptySet ) { ( set, coOcc ) =>
       val ( other, coCount, otherCount ) = coOcc
       val sim = similarity( itemCount, otherCount, coCount )
-      set + Neighbor( other, sim )
+      set + Neighbor( other, sim, otherCount )
     }.take( limit )
   }
 
-  /** Returns the similarity between two items */
+  /** Returns the similarity between two items
+    *
+    * @param item the first item
+    * @param other the other item
+    * @return the similarity between item and other
+    */
   def getSimilarityBetween(
     item:  Int,
     other: Int
@@ -83,14 +124,20 @@ class Similaria(
     similarity( itemCount, otherCount, coCount )
   }
 
-  /** Mutes an item (so that it is not considered when getting neighbors) */
+  /** Mutes an item (so that it is not considered when getting neighbors)
+    *
+    * @param item the item to be muted
+    */
   def muteItem(
     item: Int
   ) {
     dbm.setMuted( item, true )
   }
 
-  /** Unmutes an item (so that it is considered when getting neighbors) */
+  /** Unmutes an item (so that it is considered when getting neighbors)
+    *
+    * @param item the item to be unmuted
+    */
   def unmuteItem(
     item: Int
   ) {
