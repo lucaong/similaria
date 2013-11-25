@@ -4,7 +4,7 @@ package com.lucaongaro.similaria
   *
   * @constructor creates a new neighbor
   * @param item the neighbor item
-  * @param similarity the similarity to the reference item
+  * @param similarity the similarity with respect to the reference item
   * @param count the occurrency count of the neighbor item
   */
 case class Neighbor( item: Int, similarity: Double, count: Int )
