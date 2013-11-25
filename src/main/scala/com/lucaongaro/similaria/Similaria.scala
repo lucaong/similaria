@@ -5,14 +5,14 @@ import com.lucaongaro.similaria.lmdb._
 import scala.collection.SortedSet
 import java.io.File
 
-/** The main class to use, implements a recommendation engine using
-  * item-based collaborative filtering
+/** The entry point class in the package, implements a recommendation engine
+  * using item-based collaborative filtering
   *
   * Items are represented as integer IDs, and the recommendation engine is
   * trained by submitting sets of items occurring together (a.k.a. preference
   * sets)
   *
-  * @constructor create a new instance of the recommendation engine
+  * @constructor creates a new instance of the recommendation engine
   * @param opts the configuration options
   * @param similarity the measure of similarity between two items, which is a
   *        function receiving the occurrency count of each of the two items
