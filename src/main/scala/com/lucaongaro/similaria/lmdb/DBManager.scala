@@ -197,14 +197,13 @@ class DBManager( dbPath: String, dbSize: Long ) {
 
   private def statsFor( db: Database ) = {
     val stat = db.stat()
-    val mask = 0xffffffffL
     Map(
-      "pageSize"      -> ( mask & stat.ms_psize ),
-      "depth"         -> ( mask & stat.ms_depth ),
-      "branchPages"   -> ( mask & stat.ms_branch_pages ),
-      "leafPages"     -> ( mask & stat.ms_leaf_pages ),
-      "overflowPages" -> ( mask & stat.ms_overflow_pages ),
-      "entries"       -> ( mask & stat.ms_entries )
+      "pageSize"      -> stat.ms_psize,
+      "depth"         -> stat.ms_depth,
+      "branchPages"   -> stat.ms_branch_pages,
+      "leafPages"     -> stat.ms_leaf_pages,
+      "overflowPages" -> stat.ms_overflow_pages,
+      "entries"       -> stat.ms_entries
     )
   }
 }
