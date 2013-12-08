@@ -100,7 +100,7 @@ class Similaria(
     coOccurrencies.foldLeft( emptySet ) { ( set, coOcc ) =>
       val ( other, coCount, otherCount ) = coOcc
       val sim = similarity( itemCount, otherCount, coCount )
-      set + Neighbor( other, sim, otherCount )
+      set + Neighbor( other, sim, coCount )
     }.take( limit )
   }
 
