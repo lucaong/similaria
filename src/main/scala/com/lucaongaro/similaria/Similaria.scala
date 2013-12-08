@@ -92,7 +92,7 @@ class Similaria(
     item:  Int,
     limit: Int = 20
   ) = {
-    val n              = if ( limit > 25 ) limit * 2 else 50
+    val n              = if ( limit > 50 ) limit * 2 else 100
     val coOccurrencies = dbm.getCoOccurrencies( item, n )
     val itemCount      = dbm.getOccurrency( item )
     val emptySet       = SortedSet.empty[Neighbor]
