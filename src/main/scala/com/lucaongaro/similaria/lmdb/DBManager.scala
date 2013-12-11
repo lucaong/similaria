@@ -2,6 +2,7 @@ package com.lucaongaro.similaria.lmdb
 
 import org.fusesource.lmdbjni._
 import org.fusesource.lmdbjni.Constants._
+import scala.collection.concurrent
 
 class DBManager( dbPath: String, dbSize: Long ) {
 
@@ -23,7 +24,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
     item: Int
   ): Int = {
     val key = Key( item )
-    rndDB.get( key ) match {
+    cache.getOrElseUpdate( item, rndDB.get( key ) ) match {
       case CountMuted( c, _ ) => c
       case _                  => 0
     }
@@ -31,9 +32,9 @@ class DBManager( dbPath: String, dbSize: Long ) {
 
   /** Returns the occurrency count unless the item is muted */
   def getOccurrencyUnlessMuted(
-    key: Int
+    item: Int
   ): Option[Int] = {
-    rndDB.get( Key( key ) ) match {
+    cache.getOrElseUpdate( item, rndDB.get( Key( item ) ) ) match {
       case CountMuted( c, false ) => Some( c )
       case CountMuted( c, true )  => None
       case _                      => Some( 0 )
@@ -56,6 +57,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
       else
         rndDB.delete( tx, key )
     }
+    cache.remove( item )
   }
 
   /** Returns the co-occurrency count for the given pair of items */
@@ -125,6 +127,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
         case _                  => // no-op
       }
     }
+    cache.remove( item )
   }
 
   /** Returns statistics for the database */
@@ -194,6 +197,8 @@ class DBManager( dbPath: String, dbSize: Long ) {
       }
     }.filter( _ != null )
   }
+
+  private val cache = concurrent.TrieMap.empty[Int, Array[Byte]]
 
   private def statsFor( db: Database ) = {
     val stat = db.stat()
