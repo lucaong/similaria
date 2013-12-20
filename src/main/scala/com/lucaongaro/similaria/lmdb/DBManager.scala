@@ -52,12 +52,14 @@ class DBManager( dbPath: String, dbSize: Long ) {
         case CountMuted( c, a ) => CountMuted( c + increment, a )
         case _                  => CountMuted( increment, false )
       }
-      if ( updated.count > 0 )
+      if ( updated.count > 0 ) {
         rndDB.put( tx, key, updated )
-      else
+        cache.update( item, updated )
+      } else {
         rndDB.delete( tx, key )
+        cache.remove( item )
+      }
     }
-    cache.remove( item )
   }
 
   /** Returns the co-occurrency count for the given pair of items */
@@ -123,11 +125,12 @@ class DBManager( dbPath: String, dbSize: Long ) {
       val key = Key( item )
       rndDB.get( tx, key ) match {
         case CountMuted( c, _ ) =>
-          rndDB.put( tx, key, CountMuted( c, muted ) )
+          val updated = CountMuted( c, muted )
+          rndDB.put( tx, key, updated )
+          cache.update( item, updated )
         case _                  => // no-op
       }
     }
-    cache.remove( item )
   }
 
   /** Returns statistics for the database */
