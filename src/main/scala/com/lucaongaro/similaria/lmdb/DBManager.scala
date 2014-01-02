@@ -10,12 +10,17 @@ class DBManager( dbPath: String, dbSize: Long ) {
 
   private val env = new Env()
   env.setMapSize( dbSize )
-  env.setMaxDbs( 2 )
+  env.setMaxDbs( 3 )
   env.open( dbPath, NOSYNC | WRITEMAP )
 
-  // rndDB is optimized for random access
+  // In-memory cache for occurrency counts
+  private val cache = concurrent.TrieMap.empty[Int, Array[Byte]]
+
+  // rndDB is optimized for random access on co-occurrencies
   // itrDB is optimized for iterating through co-occurrencies
+  // occDB is optimized for random access to occurrencies, and cached in memory
   private val rndDB = env.openDatabase( "co-index", CREATE )
+  private val occDB = env.openDatabase( "occur", CREATE )
   private val itrDB = env.openDatabase( "co-occur",
     CREATE | DUPSORT | DUPFIXED )
 
@@ -24,7 +29,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
     item: Int
   ): Int = {
     val key = Key( item )
-    cache.getOrElseUpdate( item, rndDB.get( key ) ) match {
+    cache.getOrElseUpdate( item, occDB.get( key ) ) match {
       case CountMuted( c, _ ) => c
       case _                  => 0
     }
@@ -34,7 +39,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
   def getOccurrencyUnlessMuted(
     item: Int
   ): Option[Int] = {
-    cache.getOrElseUpdate( item, rndDB.get( Key( item ) ) ) match {
+    cache.getOrElseUpdate( item, occDB.get( Key( item ) ) ) match {
       case CountMuted( c, false ) => Some( c )
       case CountMuted( c, true )  => None
       case _                      => Some( 0 )
@@ -48,15 +53,15 @@ class DBManager( dbPath: String, dbSize: Long ) {
   ) {
     transaction( false ) { tx =>
       val key     = Key( item )
-      val updated = rndDB.get( tx, key ) match {
+      val updated = occDB.get( tx, key ) match {
         case CountMuted( c, a ) => CountMuted( c + increment, a )
         case _                  => CountMuted( increment, false )
       }
       if ( updated.count > 0 ) {
-        rndDB.put( tx, key, updated )
+        occDB.put( tx, key, updated )
         cache.update( item, updated )
       } else {
-        rndDB.delete( tx, key )
+        occDB.delete( tx, key )
         cache.remove( item )
       }
     }
@@ -123,10 +128,10 @@ class DBManager( dbPath: String, dbSize: Long ) {
   ) {
     transaction( false ) { tx =>
       val key = Key( item )
-      rndDB.get( tx, key ) match {
+      occDB.get( tx, key ) match {
         case CountMuted( c, _ ) =>
           val updated = CountMuted( c, muted )
-          rndDB.put( tx, key, updated )
+          occDB.put( tx, key, updated )
           cache.update( item, updated )
         case _                  => // no-op
       }
@@ -137,7 +142,8 @@ class DBManager( dbPath: String, dbSize: Long ) {
   def stats = {
     Map(
       "rndDB" -> statsFor( rndDB ),
-      "itrDB" -> statsFor( itrDB )
+      "itrDB" -> statsFor( itrDB ),
+      "occDB" -> statsFor( occDB )
     )
   }
 
@@ -151,6 +157,19 @@ class DBManager( dbPath: String, dbSize: Long ) {
     env.close()
   }
 
+  /** Pre-heat in-memory cache of occurrencies */
+  def preheatCache() {
+    withOccurrencyIterator { iterator =>
+      iterator.foreach { occ =>
+        occ.getKey match {
+          case Key( item ) =>
+            cache.getOrElseUpdate( item, occ.getValue )
+          case _ =>
+        }
+      }
+    }
+  }
+
   // Private methods
 
   private def withDupIterator[T](
@@ -161,6 +180,19 @@ class DBManager( dbPath: String, dbSize: Long ) {
     transaction( readonly ) { tx =>
       val c        = db.openCursor( tx )
       val iterator = DupIterator( tx, c, Key( start ) )
+      try
+        block( iterator )
+      finally
+        c.close()
+    }
+  }
+
+  private def withOccurrencyIterator[T](
+    block: KeyIterator => T
+  ): T = {
+    transaction( true ) { tx =>
+      val c        = occDB.openCursor( tx )
+      val iterator = KeyIterator( tx, c )
       try
         block( iterator )
       finally
@@ -186,9 +218,9 @@ class DBManager( dbPath: String, dbSize: Long ) {
   }
 
   private def nonMutedCoOccurrencies(
-    iter: DupIterator
+    iterator: DupIterator
   ) = {
-    iter.map { dup =>
+    iterator.map { dup =>
       dup.getValue match {
         case KeyCount( key, coCount ) =>
           getOccurrencyUnlessMuted( key ) match {
@@ -200,8 +232,6 @@ class DBManager( dbPath: String, dbSize: Long ) {
       }
     }.filter( _ != null )
   }
-
-  private val cache = concurrent.TrieMap.empty[Int, Array[Byte]]
 
   private def statsFor( db: Database ) = {
     val stat = db.stat()
