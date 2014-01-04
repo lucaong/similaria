@@ -2,7 +2,7 @@ package com.lucaongaro.similaria.lmdb
 
 import org.fusesource.lmdbjni._
 import org.fusesource.lmdbjni.Constants._
-import scala.collection.concurrent
+import scala.concurrent.stm._
 
 class DBManager( dbPath: String, dbSize: Long ) {
 
@@ -14,7 +14,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
   env.open( dbPath, NOSYNC | WRITEMAP )
 
   // In-memory cache for occurrency counts
-  private val cache = concurrent.TrieMap.empty[Int, Array[Byte]]
+  private val cache = TMap.empty[Int, Array[Byte]].single
 
   // rndDB is optimized for random access on co-occurrencies
   // itrDB is optimized for iterating through co-occurrencies
@@ -28,10 +28,12 @@ class DBManager( dbPath: String, dbSize: Long ) {
   def getOccurrency(
     item: Int
   ): Int = {
-    val key = Key( item )
-    cache.getOrElseUpdate( item, occDB.get( key ) ) match {
-      case CountMuted( c, _ ) => c
-      case _                  => 0
+    atomic { implicit tnx =>
+      val key = Key( item )
+      cache.getOrElseUpdate( item, occDB.get( key ) ) match {
+        case CountMuted( c, _ ) => c
+        case _                  => 0
+      }
     }
   }
 
@@ -39,10 +41,12 @@ class DBManager( dbPath: String, dbSize: Long ) {
   def getOccurrencyUnlessMuted(
     item: Int
   ): Option[Int] = {
-    cache.getOrElseUpdate( item, occDB.get( Key( item ) ) ) match {
-      case CountMuted( c, false ) => Some( c )
-      case CountMuted( c, true )  => None
-      case _                      => Some( 0 )
+    atomic { implicit tnx =>
+      cache.getOrElseUpdate( item, occDB.get( Key( item ) ) ) match {
+        case CountMuted( c, false ) => Some( c )
+        case CountMuted( c, true )  => None
+        case _                      => Some( 0 )
+      }
     }
   }
 
@@ -57,13 +61,11 @@ class DBManager( dbPath: String, dbSize: Long ) {
         case CountMuted( c, a ) => CountMuted( c + increment, a )
         case _                  => CountMuted( increment, false )
       }
-      if ( updated.count > 0 ) {
+      if ( updated.count > 0 )
         occDB.put( tx, key, updated )
-        cache.update( item, updated )
-      } else {
+      else
         occDB.delete( tx, key )
-        cache.remove( item )
-      }
+      cache.remove( item )
     }
   }
 
@@ -132,7 +134,7 @@ class DBManager( dbPath: String, dbSize: Long ) {
         case CountMuted( c, _ ) =>
           val updated = CountMuted( c, muted )
           occDB.put( tx, key, updated )
-          cache.update( item, updated )
+          cache.remove( item )
         case _                  => // no-op
       }
     }

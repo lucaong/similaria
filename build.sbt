@@ -22,4 +22,6 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 
 libraryDependencies += "commons-io" % "commons-io" % "2.3" % "test"
 
+libraryDependencies += "org.scala-stm" %% "scala-stm" % "0.7"
+
 fork := true
