@@ -27,26 +27,22 @@ class DBManager( dbPath: String, dbSize: Long ) {
   /** Returns the occurrency count for the given item */
   def getOccurrency(
     item: Int
-  ): Int = {
-    atomic { implicit tnx =>
-      val key = Key( item )
-      cache.getOrElseUpdate( item, occDB.get( key ) ) match {
-        case CountMuted( c, _ ) => c
-        case _                  => 0
-      }
+  ): Int = atomic { implicit tnx =>
+    val key = Key( item )
+    cache.getOrElseUpdate( item, occDB.get( key ) ) match {
+      case CountMuted( c, _ ) => c
+      case _                  => 0
     }
   }
 
   /** Returns the occurrency count unless the item is muted */
   def getOccurrencyUnlessMuted(
     item: Int
-  ): Option[Int] = {
-    atomic { implicit tnx =>
-      cache.getOrElseUpdate( item, occDB.get( Key( item ) ) ) match {
-        case CountMuted( c, false ) => Some( c )
-        case CountMuted( c, true )  => None
-        case _                      => Some( 0 )
-      }
+  ): Option[Int] = atomic { implicit tnx =>
+    cache.getOrElseUpdate( item, occDB.get( Key( item ) ) ) match {
+      case CountMuted( c, false ) => Some( c )
+      case CountMuted( c, true )  => None
+      case _                      => Some( 0 )
     }
   }
 
