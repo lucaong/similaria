@@ -64,13 +64,14 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
       }
     }
 
-    describe("getCoOccurrencies") {
-      it("returns empty list if there are none") {
-        val coOcc = dbm.getCoOccurrencies( 123 )
-        coOcc should be( Nil )
+    describe("withCoOccurrencyIterator") {
+      it("yields an empty iterator if there are no co-occurrencies") {
+        dbm.withCoOccurrencyIterator( 123 ) { coOcc =>
+          coOcc.isEmpty should be( true )
+        }
       }
 
-      it("returns a list of (key, co-count, count) tuples ordered by descending score") {
+      it("yields an iterator of (key, co-count, count) tuples ordered by descending co-count") {
         dbm.incrementOccurrency( 213, 3 )
         dbm.incrementOccurrency( 132, 2 )
         dbm.incrementOccurrency( 312, 1 )
@@ -79,46 +80,33 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
         dbm.incrementCoOccurrency( 123, 132, 2 )
         dbm.incrementCoOccurrency( 123, 312, 3 )
 
-        val coOcc = dbm.getCoOccurrencies( 123 )
-        coOcc match {
-          case one::two::three::Nil =>
-            one   should be( (312, 3, 1) )
-            two   should be( (132, 2, 2) )
-            three should be( (213, 1, 3) )
-          case _ => throw new Exception("unexpected result")
+        dbm.withCoOccurrencyIterator( 123 ) { coOcc =>
+          coOcc.toList match {
+            case one::two::three::Nil =>
+              one   should be( (312, 3, 1) )
+              two   should be( (132, 2, 2) )
+              three should be( (213, 1, 3) )
+            case _ => throw new Exception("unexpected result")
+          }
         }
       }
 
-      it("only gets co-occurrencies of the given item") {
+      it("only yields co-occurrencies of the given item") {
         dbm.incrementCoOccurrency( 123, 456, 1 )
         dbm.incrementCoOccurrency( 123, 567, 2 )
         dbm.incrementCoOccurrency( 321, 789, 3 )
 
-        val coOcc = dbm.getCoOccurrencies( 123 )
-        coOcc match {
-          case one::two::Nil =>
-            one should be( (567, 2, 0) )
-            two should be( (456, 1, 0) )
-          case _ => throw new Exception("unexpected result")
+        dbm.withCoOccurrencyIterator( 123 ) { coOcc =>
+          coOcc.toList match {
+            case one::two::Nil =>
+              one should be( (567, 2, 0) )
+              two should be( (456, 1, 0) )
+            case _ => throw new Exception("unexpected result")
+          }
         }
       }
 
-      it("gets only the first n co-occurrencies if given a limit") {
-        dbm.incrementCoOccurrency( 123, 456, 1 )
-        dbm.incrementCoOccurrency( 123, 567, 2 )
-        dbm.incrementCoOccurrency( 123, 789, 3 )
-
-        val coOcc = dbm.getCoOccurrencies( 123, 2 )
-        coOcc.length should be( 2 )
-        coOcc match {
-          case one::two::Nil =>
-            one should be( (789, 3, 0) )
-            two should be( (567, 2, 0) )
-          case _ => throw new Exception("unexpected result")
-        }
-      }
-
-      it("only considers non-muted items") {
+      it("discards muted items") {
         dbm.incrementCoOccurrency( 1, 2, 1 )
         dbm.incrementCoOccurrency( 1, 3, 2 )
         dbm.incrementCoOccurrency( 1, 4, 3 )
@@ -126,13 +114,13 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
         dbm.incrementOccurrency( 3, 1 )
         dbm.setMuted( 3, true )
 
-        val coOcc = dbm.getCoOccurrencies( 1, 2 )
-        coOcc.length should be( 2 )
-        coOcc match {
-          case one::two::Nil =>
-            one should be( (4, 3, 0) )
-            two should be( (2, 1, 0) )
-          case _ => throw new Exception("unexpected result")
+        dbm.withCoOccurrencyIterator( 1 ) { coOcc =>
+          coOcc.toList match {
+            case one::two::Nil =>
+              one should be( (4, 3, 0) )
+              two should be( (2, 1, 0) )
+            case _ => throw new Exception("unexpected result")
+          }
         }
       }
     }
@@ -140,25 +128,25 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
     describe("incrementCoOccurrency") {
       it("increments co-occurrency for a pair of items") {
         dbm.incrementCoOccurrency( 123, 456, 3 )
-        dbm.getCoOccurrencies( 123 ) should be( List( (456, 3, 0) ) )
-        dbm.getCoOccurrencies( 456 ) should be( List( (123, 3, 0) ) )
+        dbm.withCoOccurrencyIterator( 123 )( _.toList ) should be( List( (456, 3, 0) ) )
+        dbm.withCoOccurrencyIterator( 456 )( _.toList ) should be( List( (123, 3, 0) ) )
       }
 
       it("decrements co-occurrency if given a negative increment") {
         dbm.incrementCoOccurrency( 123, 456, 3 )
         dbm.incrementCoOccurrency( 123, 456, -2 )
-        dbm.getCoOccurrencies( 123 ) should be( List( (456, 1, 0) ) )
-        dbm.getCoOccurrencies( 456 ) should be( List( (123, 1, 0) ) )
+        dbm.withCoOccurrencyIterator( 123 )( _.toList ) should be( List( (456, 1, 0) ) )
+        dbm.withCoOccurrencyIterator( 456 )( _.toList ) should be( List( (123, 1, 0) ) )
       }
 
       it("deletes co-occurrency if decremented to or below 0") {
         dbm.incrementCoOccurrency( 123, 456, 2 )
         dbm.incrementCoOccurrency( 123, 456, -2 )
-        dbm.getCoOccurrencies( 123 ) should be( Nil )
-        dbm.getCoOccurrencies( 456 ) should be( Nil )
+        dbm.withCoOccurrencyIterator( 123 ) { _.isEmpty should be( true ) }
+        dbm.withCoOccurrencyIterator( 456 ) { _.isEmpty should be( true ) }
         dbm.incrementCoOccurrency( 123, 456, -2 )
-        dbm.getCoOccurrencies( 123 ) should be( Nil )
-        dbm.getCoOccurrencies( 456 ) should be( Nil )
+        dbm.withCoOccurrencyIterator( 123 ) { _.isEmpty should be( true ) }
+        dbm.withCoOccurrencyIterator( 456 ) { _.isEmpty should be( true ) }
       }
     }
 
@@ -195,7 +183,7 @@ class DBManagerSpec extends FunSpec with ShouldMatchers {
         val copy = new DBManager( copyLocation, 10485760 )
         try {
           copy.getOccurrency( 123 ) should be( 3 )
-          copy.getCoOccurrencies( 123 ) should be(
+          copy.withCoOccurrencyIterator( 123 )( _.toList ) should be(
             List( (456, 2, 5), (789, 1, 0) )
           )
         } finally {

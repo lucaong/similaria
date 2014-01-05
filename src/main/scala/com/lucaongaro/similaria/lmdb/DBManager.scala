@@ -77,20 +77,13 @@ class DBManager( dbPath: String, dbSize: Long ) {
     }
   }
 
-  /** Returns a list of the items that occur most frequently with the given
-    * item, along with their relative co-occurrency and occurrency count,
-    * filtering only active items. */
-  def getCoOccurrencies(
-    item:  Int,
-    limit: Int = -1
-  ): List[(Int, Int, Int)] = {
-    withDupIterator( item, itrDB ) { i =>
-      val tuples = nonMutedCoOccurrencies( i )
-      if ( limit < 0 )
-        tuples.toList
-      else
-        tuples.take( limit ).toList
-    }
+  /** Executes the block passing an Iterator of items that occur most
+   *  frequently together with the given item, along with their
+   *  co-occurrency and occurrency count. Muted items are discarded. */
+  def withCoOccurrencyIterator[T]( item: Int )(
+    block: Iterator[(Int, Int, Int)] => T
+  ): T = withDupIterator( item, itrDB ) { i =>
+    block( nonMutedCoOccurrencies( i ) )
   }
 
   /** Increments (or decrements) the co-occurrency count for the given
