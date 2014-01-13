@@ -10,19 +10,14 @@ import java.io.File
   *
   * Items are represented as integer IDs, and the recommendation engine is
   * trained by submitting sets of items occurring together (a.k.a. preference
-  * sets)
+  * sets). Similarity between items is given by Jaccard similarity between
+  * the sets of preference sets to which items correspond.
   *
   * @constructor creates a new instance of the recommendation engine
   * @param opts the configuration options
-  * @param similarity the measure of similarity between two items, which is a
-  *        function receiving the occurrency count of each of the two items
-  *        and their co-occurrency count. The default is Jaccard similarity
   */
 class Similaria(
-  implicit
-  val opts:       Options,
-  val similarity: ( Int, Int, Int ) => Double =
-    ( a, b, ab ) => ab.toDouble / ( a + b - ab )
+  implicit val opts: Options
 ) {
 
   type PrefSet = Set[Int]
@@ -90,19 +85,21 @@ class Similaria(
     */
   def findNeighborsOf(
     item:  Int,
-    limit: Int = 20
-  ) = {
-    val n              = if ( limit > 50 ) limit * 2 else 100
+    limit: Int = 10
+  ): SortedSet[Neighbor] = {
     val itemCount      = dbm.getOccurrency( item )
     val emptySet       = SortedSet.empty[Neighbor]
 
     dbm.withCoOccurrencyIterator( item ) { coOccurrencies =>
-      coOccurrencies.take( n ).foldLeft( emptySet ) { ( set, coOcc ) =>
+      coOccurrencies.foldLeft( emptySet ) { ( set, coOcc ) =>
         val ( other, coCount, otherCount ) = coOcc
+        val maxTheoreticalSim = similarity( itemCount, coCount, coCount )
+        if ( set.size >= limit && maxTheoreticalSim < set.last.similarity )
+          return set
         val sim = similarity( itemCount, otherCount, coCount )
-        set + Neighbor( other, sim, coCount )
+        ( set + Neighbor( other, sim, coCount ) ).take( limit )
       }
-    }.take( limit )
+    }
   }
 
   /** Returns the similarity between two items
@@ -156,6 +153,15 @@ class Similaria(
   }
 
   // Private methods
+
+  // Jaccard similarity
+  private def similarity(
+    countA: Int,
+    countB: Int,
+    coCount: Int
+  ): Double = {
+    coCount.toDouble / ( countA + countB - coCount )
+  }
 
   private def incrementSet(
     set:       PrefSet,
