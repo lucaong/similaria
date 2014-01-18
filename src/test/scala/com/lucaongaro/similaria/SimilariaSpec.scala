@@ -37,6 +37,15 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
         )
       }
 
+      it("accepts a count to add the set more than once") {
+        rec.addPreferenceSet( List(123, 456).toSet, 3 )
+        rec.dbm.getOccurrency( 123 ) should be(3)
+        rec.dbm.getOccurrency( 456 ) should be(3)
+        rec.dbm.withCoOccurrencyIterator( 123 )( _.toList ) should be(
+          List((456, 3, 3))
+        )
+      }
+
       it("returns the added set") {
         val set = rec.addPreferenceSet( List(123, 456).toSet )
         set should be( List(123, 456).toSet )
@@ -57,6 +66,19 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
         )
       }
 
+      it("accepts a count to append the subset more than once") {
+        rec.addPreferenceSet( List(1, 2).toSet, 3 )
+        rec.addToPreferenceSet( List(1, 2).toSet, List(3, 4).toSet, 3 )
+        rec.dbm.getOccurrency( 1 ) should be(3)
+        rec.dbm.getOccurrency( 2 ) should be(3)
+        rec.dbm.getOccurrency( 3 ) should be(3)
+        rec.dbm.getOccurrency( 4 ) should be(3)
+        val occurrencies = rec.dbm.withCoOccurrencyIterator( 1 )( _.toList ).sortBy( _._1 )
+        occurrencies should be(
+          List((2, 3, 3), (3, 3, 3), (4, 3, 3))
+        )
+      }
+
       it("returns the resulting set") {
         val set = rec.addToPreferenceSet( List(1, 2).toSet, List(3, 4).toSet )
         set should be( List(1, 2, 3, 4).toSet )
@@ -67,6 +89,14 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
       it("decrements occurrencies and co-occurencies for set") {
         rec.addPreferenceSet( List(123, 456).toSet )
         rec.removePreferenceSet( List(123, 456).toSet )
+        rec.dbm.getOccurrency( 123 ) should be( 0 )
+        rec.dbm.getOccurrency( 456 ) should be( 0 )
+        rec.dbm.withCoOccurrencyIterator( 123 ) { _.isEmpty should be( true ) }
+      }
+
+      it("accepts a count to remove the set more than once") {
+        rec.addPreferenceSet( List(123, 456).toSet, 3 )
+        rec.removePreferenceSet( List(123, 456).toSet, 3 )
         rec.dbm.getOccurrency( 123 ) should be( 0 )
         rec.dbm.getOccurrency( 456 ) should be( 0 )
         rec.dbm.withCoOccurrencyIterator( 123 ) { _.isEmpty should be( true ) }
@@ -89,6 +119,19 @@ class SimilariaSpec extends FunSpec with ShouldMatchers {
         val occurrencies = rec.dbm.withCoOccurrencyIterator( 1 )( _.toList ).sortBy( _._1 )
         occurrencies should be(
           List( (2, 1, 1) )
+        )
+      }
+
+      it("accepts a count to remove the subset more than once") {
+        rec.addPreferenceSet( List(1, 2, 3, 4).toSet, 3 )
+        rec.removeFromPreferenceSet( List(1, 2, 3, 4).toSet, List(3, 4).toSet, 3 )
+        rec.dbm.getOccurrency( 1 ) should be( 3 )
+        rec.dbm.getOccurrency( 2 ) should be( 3 )
+        rec.dbm.getOccurrency( 3 ) should be( 0 )
+        rec.dbm.getOccurrency( 4 ) should be( 0 )
+        val occurrencies = rec.dbm.withCoOccurrencyIterator( 1 )( _.toList ).sortBy( _._1 )
+        occurrencies should be(
+          List( (2, 3, 3) )
         )
       }
 

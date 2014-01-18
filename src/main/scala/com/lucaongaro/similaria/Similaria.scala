@@ -26,12 +26,14 @@ class Similaria(
   /** Adds a preference set
     *
     * @param prefSet the preference set to be added
+    * @param count how many times the preference set should be added
     * @return the set that was added
     */
   def addPreferenceSet(
-    prefSet: PrefSet
+    prefSet: PrefSet,
+    count:   Int = 1
   ) = {
-    incrementSet( prefSet, 1 )
+    incrementSet( prefSet, count )
     prefSet
   }
 
@@ -39,14 +41,16 @@ class Similaria(
     *
     * @param originalSet the pre-existing set
     * @param setToAdd the subset to be added
+    * @param count how many times the subset should be added
     * @return the resulting set
     */
   def addToPreferenceSet(
     originalSet: PrefSet,
-    setToAdd:    PrefSet
+    setToAdd:    PrefSet,
+    count:       Int = 1
   ) = {
     val set = setToAdd &~ originalSet
-    incrementSubset( originalSet, set, 1 )
+    incrementSubset( originalSet, set, count )
     originalSet | set
   }
 
@@ -54,11 +58,13 @@ class Similaria(
     *
     * @param prefSet the preference set to be removed
     * @return the set that was removed
+    * @param count how many times the preference set should be removed
     */
   def removePreferenceSet(
-    prefSet: PrefSet
+    prefSet: PrefSet,
+    count:   Int = 1
   ) = {
-    incrementSet( prefSet, -1 )
+    incrementSet( prefSet, -1 * count )
     prefSet
   }
 
@@ -66,14 +72,16 @@ class Similaria(
     *
     * @param originalSet the pre-existing set
     * @param setToRemove the subset to be removed
+    * @param count how many times the subset should be removed
     * @return the resulting set
     */
   def removeFromPreferenceSet(
     originalSet: PrefSet,
-    setToRemove: PrefSet
+    setToRemove: PrefSet,
+    count:       Int = 1
   ) = {
     val set = setToRemove & originalSet
-    incrementSubset( originalSet, set, -1 )
+    incrementSubset( originalSet, set, -1 * count )
     originalSet &~ set
   }
 
