@@ -19,6 +19,6 @@ object Options {
     */
   implicit val default = new Options(
     "db/similaria",
-    1000 * 1048576  // 1GB
+    1073741824 // 1GB
   )
 }
