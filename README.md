@@ -16,10 +16,10 @@ likes/visits/pins a product) other related products can be recommended.
 ## A Convenient Engine for "Not-Too-Big Data"
 
 Similaria is a self-contained, centralized engine. As such, there is an upper
-limit - although very high - on how much traffic it can handle. On the other
-hand is very easy to setup, and it can be trained online, with no need for
-batch background processing. You just start it and it's ready to learn from new
-data and give recommendations.
+limit - although very high - on how much load it can handle. On the other hand
+is very easy to setup, and it can be trained online, with no need for batch
+background processing. You just start it and it's ready to learn from new data
+and give recommendations.
 
 
 ## Usage
@@ -29,7 +29,7 @@ import com.lucaongaro.similaria._
 
 val opts = Options(
     dbPath: "db/similaria", // Directory where to persist data (must exist)
-    dbSize: 1048576000      // Maximum size of dataset (here 1GB). Can be increased later.
+    dbSize: 1073741824      // Maximum data size (here 1GB). Can be increased later.
   )
 
 val similaria = new Similaria( opts )
@@ -56,7 +56,7 @@ val preferenceSets = List(
   Set( 5, 1, 2 )
 )
 
-// Tell similaria to learn this preference set
+/* Tell similaria to learn this preference set: */
 for ( set <- preferenceSets ) similaria.addPreferenceSet( set )
 
 /*
@@ -66,20 +66,27 @@ for ( set <- preferenceSets ) similaria.addPreferenceSet( set )
 */
 similaria.addToPreferenceSet( preferenceSets.head, Set( 34, 52 ) )
 
+/*
+*  Similaria also provides methods to forget a preference set or part of it.
+*  Note how similaria does not know directly about users, but only about
+*  preference sets.
+*/
+
 /* ---- Getting Recommendations: ----
 *
 *  You can give an item ID to similaria, and ask for a number of recommended
 *  items. These are the items that tend to co-occur in the same preference sets
-*  as the given item. We call them the most similar items, or "neighbors". The
-*  recommended items are ordered by a similarity measure (Jaccard distance)
-*  that goes from 0 (no similarity) to 1 (perfect similarity).
+*  as the given item. We call these items the "neighbors" of the reference
+*  item. The recommended items are instances of the `Neighbor` case class, and
+*  ordered by a similarity measure (Jaccard distance) that goes from 0 (no
+*  similarity) to 1 (perfect similarity).
 *
 *  For example, if we want to get 10 recommendations for item with ID 5:
 */
 val neighbors = similaria.findNeighborsOf( 5, limit = 10 )
 
-println "If you liked item 5 you might also like:"
+println("If you liked item 5 you might also like:")
 neighbors.foreach { n =>
-  println s" - Item ${n.item} (similarity: ${n.similarity}, co-occurrencies: ${n.coOccurrencies})"
+  println s"Item ${n.item} (similarity: ${n.similarity}, co-occurrencies: ${n.coOccurrencies})"
 }
 ```
