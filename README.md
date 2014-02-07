@@ -38,7 +38,7 @@ val similaria = new Similaria( opts )
 *  ---- Training Similaria: ----
 *
 *  Say that some users liked the following items (referenced by numeric IDs):
-* 
+*
 *  | User | Items liked  |
 *  |  1   | 1, 14, 5, 45 |
 *  |  2   | 34, 3        |
@@ -90,3 +90,10 @@ neighbors.foreach { n =>
   println s"Item ${n.item} (similarity: ${n.similarity}, co-occurrencies: ${n.coOccurrencies})"
 }
 ```
+
+## Credit
+
+Similaria persists data using the Symas Lightning Memory-Mapped Database
+(LMDB), which is licensed under the OpenLDAP Public License. The Java binding
+is provided by lmdbjni, which is licensed under the Apache License, Version
+2.0.
