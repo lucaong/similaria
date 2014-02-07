@@ -18,9 +18,8 @@ import java.io.File
   */
 class Similaria(
   implicit val opts: Options
-) {
+) extends ItemBasedRecommender {
 
-  type PrefSet = Set[Int]
   val dbm = new DBManager( opts.dbPath, opts.dbSize )
 
   /** Adds a preference set
@@ -30,7 +29,7 @@ class Similaria(
     * @return the set that was added
     */
   def addPreferenceSet(
-    prefSet: PrefSet,
+    prefSet: PreferenceSet,
     count:   Int = 1
   ) = {
     incrementSet( prefSet, count )
@@ -45,8 +44,8 @@ class Similaria(
     * @return the resulting set
     */
   def addToPreferenceSet(
-    originalSet: PrefSet,
-    setToAdd:    PrefSet,
+    originalSet: PreferenceSet,
+    setToAdd:    PreferenceSet,
     count:       Int = 1
   ) = {
     val set = setToAdd &~ originalSet
@@ -61,7 +60,7 @@ class Similaria(
     * @param count how many times the preference set should be removed
     */
   def removePreferenceSet(
-    prefSet: PrefSet,
+    prefSet: PreferenceSet,
     count:   Int = 1
   ) = {
     incrementSet( prefSet, -1 * count )
@@ -76,8 +75,8 @@ class Similaria(
     * @return the resulting set
     */
   def removeFromPreferenceSet(
-    originalSet: PrefSet,
-    setToRemove: PrefSet,
+    originalSet: PreferenceSet,
+    setToRemove: PreferenceSet,
     count:       Int = 1
   ) = {
     val set = setToRemove & originalSet
@@ -172,7 +171,7 @@ class Similaria(
   }
 
   private def incrementSet(
-    set:       PrefSet,
+    set:       PreferenceSet,
     increment: Int
   ) {
     set.subsets(2).map( _.toList ).foreach {
@@ -186,8 +185,8 @@ class Similaria(
   }
 
   private def incrementSubset(
-    originalSet: PrefSet,
-    subset:      PrefSet,
+    originalSet: PreferenceSet,
+    subset:      PreferenceSet,
     increment:   Int
   ) {
     incrementSet( subset, increment )
