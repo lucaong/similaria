@@ -80,7 +80,8 @@ val similaria = new Similaria( opts )
 /*
 *  ---- Training Similaria: ----
 *
-*  Say that some users liked the following items (referenced by numeric IDs):
+*  Let's say that some users liked the following items (referenced by numeric
+*  IDs):
 *
 *  | User | Items liked  |
 *  |  1   | 1, 14, 5, 45 |
@@ -129,10 +130,17 @@ similaria.addToPreferenceSet( preferenceSets.head, Set( 34, 52 ) )
 val neighbors = similaria.findNeighborsOf( 5, limit = 10 )
 
 println("If you liked item 5 you might also like:")
+
 neighbors.foreach { n =>
   println s"Item ${n.item} (similarity: ${n.similarity}, co-occurrencies: ${n.coOccurrencies})"
 }
 ```
+
+
+## Compile the JAR
+
+Checkout the repo and run `sbt +assembly`. This will run the tests and compile
+fat JARs for Scala versions `2.10.0`, `2.10.1` and `2.10.2`.
 
 
 ## Caveats
