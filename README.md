@@ -22,6 +22,48 @@ background processing. You just start it and it's ready to learn from new data
 and give recommendations.
 
 
+## How Performant Is It?
+
+I went through several iterations to optimize Similaria, in the effort of making
+it as fast as possible, effectively pushing its upper limit. My intention is to
+publish a more complete and meaningful benchmark and performance analysis, but
+for now these are my results testing it locally on a 2009 MacBook Pro with SSD.
+I wrapped Similaria in a thin HTTP API to serve recommendations in JSONformat. I
+trained the engine with the LastFM 360K dataset. When asking for 10 recommended
+artists for people who like "The Beatles", I could reach ~3000 requests per
+second:
+
+    Concurrency Level:      4
+    Time taken for tests:   0.628 seconds
+    Complete requests:      2000
+    Failed requests:        0
+    Write errors:           0
+    Total transferred:      1296000 bytes
+    HTML transferred:       1058000 bytes
+    Requests per second:    3186.00 [#/sec] (mean)
+    Time per request:       1.255 [ms] (mean)
+    Time per request:       0.314 [ms] (mean, across all concurrent requests)
+    Transfer rate:          2016.14 [Kbytes/sec] received
+
+    Connection Times (ms)
+                  min  mean[+/-sd] median   max
+    Connect:        0    0   0.2      0       4
+    Processing:     0    1   0.5      1       5
+    Waiting:        0    1   0.5      1       5
+    Total:          0    1   0.5      1       6
+
+    Percentage of the requests served within a certain time (ms)
+      50%      1
+      66%      1
+      75%      1
+      80%      1
+      90%      2
+      95%      2
+      98%      3
+      99%      3
+     100%      6 (longest request)
+
+
 ## Usage
 
 ```scala
