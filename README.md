@@ -19,7 +19,8 @@ Similaria is a self-contained, centralized engine. As such, there is an upper
 limit - although very high - on how much load it can handle. On the other hand
 is very easy to setup, and it can be trained online, with no need for batch
 background processing. You just start it and it's ready to learn from new data
-and give recommendations.
+and give recommendations. It is safe to use Similaria in a multi-threaded
+environment.
 
 
 ## How Performant Is It?
@@ -132,6 +133,19 @@ neighbors.foreach { n =>
   println s"Item ${n.item} (similarity: ${n.similarity}, co-occurrencies: ${n.coOccurrencies})"
 }
 ```
+
+
+## Caveats
+
+Because Similaria uses a JNI binding for LMDB, and this binding is only provided
+for 64bit OSX and Linux, it can only work on these platforms. Also, a general
+problem with `sbt` and JNI bindings may cause Similaria not to work in the
+console. When embedded in `sbt` projects it should work normally, but it may
+require a recent `sbt` version, and the option `fork` set to `true`.
+
+A solution to these problems would be to use JNA instead. I am planning to work
+on a JNA binding for LMDB, and any help there is very welcome.
+
 
 ## Credit
 
