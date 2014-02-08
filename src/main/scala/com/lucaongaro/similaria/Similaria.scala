@@ -3,6 +3,7 @@ package com.lucaongaro.similaria
 import com.lucaongaro.similaria._
 import com.lucaongaro.similaria.lmdb._
 import scala.collection.SortedSet
+import scala.collection.immutable.TreeSet
 import java.io.File
 
 /** The entry point class in the package, implements a recommendation engine
@@ -63,7 +64,7 @@ class Similaria(
     limit: Int = 10
   ): SortedSet[Neighbor] = {
     val itemCount      = dbm.getOccurrency( item )
-    val emptySet       = SortedSet.empty[Neighbor]
+    val emptySet       = TreeSet.empty[Neighbor]
 
     dbm.withCoOccurrencyIterator( item ) { coOccurrencies =>
       coOccurrencies.foldLeft( emptySet ) { ( set, coOcc ) =>
