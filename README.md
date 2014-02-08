@@ -28,10 +28,10 @@ I went through several iterations to optimize Similaria, in the effort of making
 it as fast as possible, effectively pushing its upper limit. My intention is to
 publish a more complete and meaningful benchmark and performance analysis, but
 for now these are my results testing it locally on a 2009 MacBook Pro with SSD.
-I wrapped Similaria in a thin HTTP API to serve recommendations in JSONformat. I
-trained the engine with the LastFM 360K dataset. When asking for 10 recommended
-artists for people who like "The Beatles", I could reach ~3000 requests per
-second:
+I wrapped Similaria in a thin HTTP API to serve recommendations in JSON format.
+I trained the engine with the LastFM 360K dataset. When asking for 10
+recommended artists for people who like "The Beatles", I could reach ~3000
+requests per second:
 
     Concurrency Level:      4
     Time taken for tests:   0.628 seconds
